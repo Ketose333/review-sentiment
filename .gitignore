@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# ML artifacts (대용량 — Git LFS 또는 별도 배포)
+*.h5
+*.pkl
+*.bin
+*.pt
+*.onnx
+data/
+models/
+
+# Streamlit / secrets
+.streamlit/secrets.toml
+.env
+.env.*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
