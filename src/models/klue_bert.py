@@ -83,7 +83,13 @@ def save(tokenizer, model, out_dir: str = "models/klue_bert") -> None:
 
 
 def load(model_dir: str = "models/klue_bert"):
-    if not os.path.exists(os.path.join(model_dir, "pytorch_model.bin")):
+    # transformers may serialize weights as either model.safetensors or pytorch_model.bin
+    # depending on version; accept whichever is present.
+    has_weights = any(
+        os.path.exists(os.path.join(model_dir, name))
+        for name in ("model.safetensors", "pytorch_model.bin")
+    )
+    if not has_weights:
         raise ModelLoadError(f"KLUE-BERT model artifacts not found in {model_dir}")
     tokenizer = AutoTokenizer.from_pretrained(model_dir)
     model = AutoModelForSequenceClassification.from_pretrained(model_dir)
