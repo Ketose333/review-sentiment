@@ -6,7 +6,7 @@ venv/
 env/
 
 # ML artifacts: tracked via Git LFS (.gitattributes), not excluded here
-data/
+/data/
 
 # Streamlit / secrets
 .streamlit/secrets.toml
