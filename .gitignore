@@ -5,14 +5,8 @@ __pycache__/
 venv/
 env/
 
-# ML artifacts (대용량 — Git LFS 또는 별도 배포)
-*.h5
-*.pkl
-*.bin
-*.pt
-*.onnx
+# ML artifacts: tracked via Git LFS (.gitattributes), not excluded here
 data/
-models/
 
 # Streamlit / secrets
 .streamlit/secrets.toml
