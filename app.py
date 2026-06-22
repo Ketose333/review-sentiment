@@ -42,12 +42,12 @@ def _load_eda_stats():
 
 with st.sidebar:
     st.title("🎬 영화 리뷰 감성 분석")
-    st.caption("NSMC 데이터셋 기반 한국어 영화 리뷰 감성 분류 데모")
+    st.caption("한국어 영화 리뷰 감성 분류 데모")
     model_name = st.selectbox("모델 선택", get_available_models())
     st.divider()
     st.markdown(
-        "**데이터셋**: NSMC (Naver Sentiment Movie Corpus)\n\n"
-        "**전처리**: Okt 형태소 분석 + 불용어 제거\n\n"
+        "**데이터셋**: NSMC\n\n"
+        "**전처리**: Okt + 불용어 제거\n\n"
         f"**현재 모델**: {model_name}"
     )
 
