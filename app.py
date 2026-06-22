@@ -13,7 +13,7 @@ from src.evaluation.metrics import build_comparison_table, load_all_metrics
 from src.explainability.lime_explainer import explain
 from src.models.base import EmptyInputError, ModelLoadError
 from src.models.registry import get_available_models, load_model
-from src.preprocessing.tokenizer import tokenize
+from src.preprocessing.tokenizer import clean_text
 
 st.set_page_config(page_title="review-sentiment", page_icon="🎬", layout="wide")
 
@@ -84,7 +84,10 @@ with tab_predict:
             except ModelLoadError:
                 st.error(f"{model_name} 모델을 불러올 수 없습니다. TF-IDF 모델을 사용해보세요.")
             else:
-                if not tokenize(stripped):
+                # 비한글(이모지·특수문자) 입력은 Okt 없이 값싼 clean_text로 사전 차단.
+                # 토큰이 모두 불용어인 경우는 predict_proba가 EmptyInputError로 처리하므로
+                # 여기서 Okt tokenize()를 또 호출하지 않는다(예측 1회당 Okt 1회로 축소).
+                if not clean_text(stripped):
                     st.warning("분석 가능한 텍스트가 없습니다. 한글 리뷰를 입력해주세요.")
                 else:
                     try:
