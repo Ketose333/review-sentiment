@@ -97,7 +97,7 @@ with tab_predict:
                         emoji = "😊" if label == "긍정" else "😞"
                         positive_proba = confidence if label == "긍정" else 1 - confidence
                         with st.container(border=True):
-                            st.metric(label=f"예측 결과 {emoji}", value=label, delta=f"{confidence:.0%} 신뢰도")
+                            st.metric(label=f"예측 결과 {emoji}", value=label)
                             st.caption("긍정/부정 확률 분포")
                             st.progress(positive_proba, text=f"😊 긍정 {positive_proba:.0%}")
                             st.progress(1 - positive_proba, text=f"😞 부정 {1 - positive_proba:.0%}")
@@ -126,9 +126,13 @@ with tab_compare:
         for col, (model_display_name, row) in zip(metric_cols, comparison_df.iterrows()):
             col.metric(model_display_name, f"{row['Accuracy']:.1%}", help="Accuracy")
 
+        best_model = comparison_df["F1"].idxmax()
+        st.success(f"🏆 F1 기준 최고 성능 모델: **{best_model}** (F1 {comparison_df.loc[best_model, 'F1']:.4f})")
+
         st.divider()
         st.dataframe(comparison_df, use_container_width=True)
-        st.bar_chart(comparison_df[["Accuracy", "F1"]])
+        # stack=False: Accuracy/F1을 누적이 아닌 그룹 막대로 표시(누적 시 ~1.7로 차올라 오해 소지)
+        st.bar_chart(comparison_df[["Accuracy", "F1"]], stack=False)
 
         for model_display_name, metrics in all_metrics.items():
             note = metrics.get("note")
@@ -140,21 +144,35 @@ with tab_eda:
     if eda_stats is None:
         st.info("EDA 통계가 아직 생성되지 않았습니다. `python scripts/compute_eda.py`를 실행해주세요.")
     else:
-        st.markdown("**레이블 분포** — 학습 데이터(150,000건) 기준")
         label_counts = eda_stats["label_counts"]
+        total = sum(label_counts.values())
+        hist = eda_stats["length_histogram"]
+        bin_edges = hist["bin_edges"]
+        # 히스토그램 빈 중앙값 가중평균으로 평균 길이 근사
+        bin_centers = [(bin_edges[i] + bin_edges[i + 1]) / 2 for i in range(len(bin_edges) - 1)]
+        mean_length = sum(c * n for c, n in zip(bin_centers, hist["counts"])) / total if total else 0
+
+        sum_cols = st.columns(4)
+        sum_cols[0].metric("총 학습 리뷰", f"{total:,}건")
+        sum_cols[1].metric("긍정 비율", f"{label_counts.get('긍정', 0) / total:.1%}" if total else "-")
+        sum_cols[2].metric("부정 비율", f"{label_counts.get('부정', 0) / total:.1%}" if total else "-")
+        sum_cols[3].metric("평균 길이", f"약 {mean_length:.0f}자")
+        st.caption("레이블이 거의 5:5로 균형 잡혀 있어 정확도(Accuracy)를 주요 지표로 써도 무방합니다.")
+
+        st.divider()
+        st.markdown("**레이블 분포** — 긍정/부정 리뷰 수")
         label_df = pd.DataFrame({"건수": label_counts}, index=list(label_counts.keys()))
         st.bar_chart(label_df)
 
         st.divider()
         st.markdown("**리뷰 길이 분포** — 글자 수 기준 히스토그램")
-        hist = eda_stats["length_histogram"]
-        bin_edges = hist["bin_edges"]
         bin_labels = [f"{int(bin_edges[i])}~{int(bin_edges[i + 1])}" for i in range(len(bin_edges) - 1)]
         length_df = pd.DataFrame({"리뷰 수": hist["counts"]}, index=bin_labels)
         st.bar_chart(length_df)
 
         st.divider()
-        st.markdown("**레이블별 빈출 단어 TOP 20** — Okt 형태소 분석 + 불용어 제거 후 집계")
+        tokenizer_label = "Okt 형태소 분석" if eda_stats.get("word_tokenizer") == "okt" else "간이 토크나이저(공백 분리)"
+        st.markdown(f"**레이블별 빈출 단어 TOP 20** — {tokenizer_label} + 불용어 제거 후 집계")
         word_col_neg, word_col_pos = st.columns(2)
         for col, label_name in ((word_col_neg, "부정"), (word_col_pos, "긍정")):
             words_df = pd.DataFrame(eda_stats["top_words_by_label"][label_name], columns=["단어", "빈도"])
