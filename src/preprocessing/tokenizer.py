@@ -4,7 +4,33 @@ Using the same preprocess_for_vectorizer() at train time (on the training corpus
 and at inference time (on user input) is what guarantees train/inference parity.
 """
 
+import os
 import re
+
+
+def _register_jvm_dll_dir() -> None:
+    """Windows: put the JDK's jvm.dll on the DLL search path before konlpy imports jpype.
+
+    `_jpype.pyd` depends on jvm.dll at import time; konlpy/jpype don't register its
+    directory, so standalone scripts (e.g. compute_eda.py) fail with
+    "DLL load failed while importing _jpype". No-op on Linux/macOS — os.add_dll_directory
+    doesn't exist there (Streamlit Cloud installs the JVM via packages.txt instead).
+    """
+    if not hasattr(os, "add_dll_directory"):
+        return
+    java_home = os.environ.get("JAVA_HOME")
+    if not java_home:
+        return
+    for sub in ("bin", os.path.join("bin", "server")):
+        candidate = os.path.join(java_home, sub)
+        if os.path.isdir(candidate):
+            try:
+                os.add_dll_directory(candidate)
+            except OSError:
+                pass
+
+
+_register_jvm_dll_dir()
 
 from konlpy.tag import Okt
 
