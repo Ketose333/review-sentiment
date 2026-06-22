@@ -74,11 +74,9 @@ with tab_predict:
     stripped = review_text.strip()
 
     with result_col:
-        if not predict_clicked:
-            st.info("왼쪽에 리뷰를 입력하고 예측하기를 눌러주세요.")
-        elif not stripped:
+        if predict_clicked and not stripped:
             st.warning("리뷰 텍스트를 입력해주세요.")
-        else:
+        elif predict_clicked:
             try:
                 model = _cached_load_model(model_name)
             except ModelLoadError:
