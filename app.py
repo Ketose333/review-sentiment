@@ -9,11 +9,267 @@ import os
 import pandas as pd
 import streamlit as st
 
-from src.evaluation.metrics import build_comparison_table, load_all_metrics
-from src.explainability.lime_explainer import explain
-from src.models.base import EmptyInputError, ModelLoadError
-from src.models.registry import get_available_models, load_model
-from src.preprocessing.tokenizer import clean_text
+import re
+
+import tensorflow as tf  # noqa: F401  (Okt/jpype보다 먼저 import해야 Windows DLL 충돌을 피함)
+
+
+def _register_jvm_dll_dir() -> None:
+    if not hasattr(os, "add_dll_directory"):
+        return
+    java_home = os.environ.get("JAVA_HOME")
+    if not java_home:
+        return
+    for sub in ("bin", os.path.join("bin", "server")):
+        candidate = os.path.join(java_home, sub)
+        if os.path.isdir(candidate):
+            try:
+                os.add_dll_directory(candidate)
+            except OSError:
+                pass
+
+
+_register_jvm_dll_dir()
+
+from konlpy.tag import Okt
+
+KOREAN_STOPWORDS: set[str] = {
+    "의", "가", "이", "은", "들", "는", "좀", "잘", "걍", "과",
+    "도", "를", "으로", "자", "에", "와", "한", "하다", "에서", "께서",
+    "이다", "있다", "되다", "그", "저", "것", "수", "등", "들이", "에게",
+    "보다", "만", "에는", "라서", "이라", "랑", "이랑", "거", "것을",
+    "다", "을", "고", "지", "면", "게", "도요",
+}
+
+_HANGUL_PATTERN = re.compile(r"[^ㄱ-ㅎㅏ-ㅣ가-힣\s]")
+_okt = Okt()
+
+
+def clean_text(text: str) -> str:
+    return _HANGUL_PATTERN.sub("", text or "")
+
+
+def tokenize(text: str, remove_stopwords: bool = True) -> list[str]:
+    cleaned = clean_text(text).strip()
+    if not cleaned:
+        return []
+    morphs = _okt.morphs(cleaned, stem=True)
+    tokens = [m for m in morphs if m.strip()]
+    if remove_stopwords:
+        tokens = [t for t in tokens if t not in KOREAN_STOPWORDS]
+    return tokens
+
+
+def preprocess_for_vectorizer(text: str) -> str:
+    return " ".join(tokenize(text))
+
+
+class ModelLoadError(Exception):
+    pass
+
+
+class EmptyInputError(Exception):
+    pass
+
+
+import glob
+
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+
+
+def compute_metrics(y_true, y_pred) -> dict:
+    return {
+        "accuracy": round(float(accuracy_score(y_true, y_pred)), 4),
+        "precision": round(float(precision_score(y_true, y_pred, average="binary")), 4),
+        "recall": round(float(recall_score(y_true, y_pred, average="binary")), 4),
+        "f1": round(float(f1_score(y_true, y_pred, average="binary")), 4),
+    }
+
+
+def build_comparison_table(results: dict) -> pd.DataFrame:
+    if not results:
+        return pd.DataFrame(columns=["Accuracy", "Precision", "Recall", "F1"])
+    df = pd.DataFrame(results).T
+    df = df.rename(
+        columns={"accuracy": "Accuracy", "precision": "Precision", "recall": "Recall", "f1": "F1"}
+    )
+    return df[["Accuracy", "Precision", "Recall", "F1"]]
+
+
+def load_all_metrics(models_dir: str = "models") -> dict:
+    results: dict = {}
+    for metrics_path in sorted(glob.glob(os.path.join(models_dir, "*", "metrics.json"))):
+        with open(metrics_path, encoding="utf-8") as f:
+            data = json.load(f)
+        model_dir_name = os.path.basename(os.path.dirname(metrics_path))
+        display_name = data.pop("display_name", model_dir_name)
+        results[display_name] = data
+    return results
+
+
+# ----- 모델 1: TF-IDF + LogisticRegression -----
+import joblib
+
+LABEL_MAP = {0: "부정", 1: "긍정"}
+
+
+def _tfidf_load(model_dir: str = "models/tfidf_lr"):
+    vectorizer_path = os.path.join(model_dir, "vectorizer.pkl")
+    model_path = os.path.join(model_dir, "model.pkl")
+    if not os.path.exists(vectorizer_path) or not os.path.exists(model_path):
+        raise ModelLoadError(f"TF-IDF model artifacts not found in {model_dir}")
+    return joblib.load(vectorizer_path), joblib.load(model_path)
+
+
+class TfidfLRModel:
+    def __init__(self, vectorizer, model):
+        self.vectorizer = vectorizer
+        self.model = model
+
+    def predict_proba(self, raw_text: str):
+        processed = preprocess_for_vectorizer(raw_text)
+        if not processed:
+            raise EmptyInputError("No tokens remain after preprocessing")
+        X = self.vectorizer.transform([processed])
+        probabilities = self.model.predict_proba(X)[0]
+        predicted_class = probabilities.argmax()
+        return LABEL_MAP[predicted_class], float(probabilities[predicted_class])
+
+
+# ----- 모델 2: LSTM -----
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+
+LSTM_MAX_LEN = 40
+
+
+def _lstm_to_sequences(tokenizer, corpus):
+    sequences = tokenizer.texts_to_sequences(corpus)
+    return pad_sequences(sequences, maxlen=LSTM_MAX_LEN, padding="post", truncating="post")
+
+
+def _lstm_load(model_dir: str = "models/lstm"):
+    model_path = os.path.join(model_dir, "model.h5")
+    tokenizer_path = os.path.join(model_dir, "tokenizer.json")
+    if not os.path.exists(model_path) or not os.path.exists(tokenizer_path):
+        raise ModelLoadError(f"LSTM model artifacts not found in {model_dir}")
+    model = tf.keras.models.load_model(model_path)
+    with open(tokenizer_path, encoding="utf-8") as f:
+        tokenizer = tf.keras.preprocessing.text.tokenizer_from_json(f.read())
+    return tokenizer, model
+
+
+class LSTMModel:
+    def __init__(self, tokenizer, model):
+        self.tokenizer = tokenizer
+        self.model = model
+
+    def predict_proba(self, raw_text: str):
+        processed = preprocess_for_vectorizer(raw_text)
+        if not processed:
+            raise EmptyInputError("No tokens remain after preprocessing")
+        X = _lstm_to_sequences(self.tokenizer, pd.Series([processed]))
+        positive_proba = float(self.model.predict(X, verbose=0).ravel()[0])
+        predicted_class = 1 if positive_proba >= 0.5 else 0
+        confidence = positive_proba if predicted_class == 1 else 1 - positive_proba
+        return LABEL_MAP[predicted_class], confidence
+
+
+# ----- 모델 3: KLUE-BERT -----
+import torch
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
+
+BERT_MAX_LEN = 64
+
+
+def _bert_load(model_dir: str = "models/klue_bert"):
+    has_weights = any(
+        os.path.exists(os.path.join(model_dir, name))
+        for name in ("model.safetensors", "pytorch_model.bin")
+    )
+    if not has_weights:
+        raise ModelLoadError(f"KLUE-BERT model artifacts not found in {model_dir}")
+    tokenizer = AutoTokenizer.from_pretrained(model_dir)
+    model = AutoModelForSequenceClassification.from_pretrained(model_dir)
+    model.eval()
+    return tokenizer, model
+
+
+class KlueBertModel:
+    def __init__(self, tokenizer, model):
+        self.tokenizer = tokenizer
+        self.model = model
+
+    def predict_proba(self, raw_text: str):
+        stripped = raw_text.strip()
+        if not stripped:
+            raise EmptyInputError("Empty input text")
+        inputs = self.tokenizer(stripped, truncation=True, max_length=BERT_MAX_LEN, return_tensors="pt")
+        with torch.no_grad():
+            logits = self.model(**inputs).logits
+        probabilities = torch.softmax(logits, dim=-1)[0]
+        predicted_class = int(probabilities.argmax())
+        return LABEL_MAP[predicted_class], float(probabilities[predicted_class])
+
+
+# ----- 모델 레지스트리 -----
+MODEL_REGISTRY = {
+    "TF-IDF + LogisticRegression": {"loader": lambda: TfidfLRModel(*_tfidf_load())},
+    "LSTM": {"loader": lambda: LSTMModel(*_lstm_load())},
+    "KLUE-BERT": {"loader": lambda: KlueBertModel(*_bert_load())},
+}
+
+
+def get_available_models() -> list:
+    return list(MODEL_REGISTRY.keys())
+
+
+def load_model(display_name: str):
+    entry = MODEL_REGISTRY.get(display_name)
+    if entry is None:
+        raise ModelLoadError(f"Unknown model: {display_name}")
+    try:
+        return entry["loader"]()
+    except ModelLoadError:
+        raise
+    except Exception as exc:
+        raise ModelLoadError(f"Failed to load model '{display_name}': {exc}") from exc
+
+
+# ----- LIME 기반 예측 근거 -----
+import numpy as np
+from lime.lime_text import LimeTextExplainer
+
+_LIME_CLASS_NAMES = ["부정", "긍정"]
+_LIME_LABEL_TO_INDEX = {"부정": 0, "긍정": 1}
+
+
+def _make_classifier_fn(model):
+    def classifier_fn(texts):
+        probs = np.full((len(texts), 2), 0.5)
+        for i, text in enumerate(texts):
+            try:
+                label, confidence = model.predict_proba(text)
+            except EmptyInputError:
+                continue
+            idx = _LIME_LABEL_TO_INDEX[label]
+            probs[i, idx] = confidence
+            probs[i, 1 - idx] = 1 - confidence
+        return probs
+
+    return classifier_fn
+
+
+def explain(model, text: str, num_features: int = 8, num_samples: int = 300):
+    explainer = LimeTextExplainer(class_names=_LIME_CLASS_NAMES)
+    exp = explainer.explain_instance(
+        text,
+        _make_classifier_fn(model),
+        num_features=num_features,
+        num_samples=num_samples,
+        labels=(1,),
+    )
+    return exp.as_list(label=1)
+
 
 st.set_page_config(page_title="review-sentiment", page_icon="🎬", layout="wide")
 
