@@ -11,12 +11,14 @@ import streamlit as st
 
 import re
 
-import tensorflow as tf  # noqa: F401  (Okt/jpype보다 먼저 import해야 Windows DLL 충돌을 피함)
-
 
 def _register_jvm_dll_dir() -> None:
     if not hasattr(os, "add_dll_directory"):
         return
+    try:
+        import tensorflow  # noqa: F401  (Windows에서 Okt/jpype보다 먼저 import해야 DLL 충돌을 피함)
+    except ImportError:
+        pass
     java_home = os.environ.get("JAVA_HOME")
     if not java_home:
         return
@@ -136,18 +138,20 @@ class TfidfLRModel:
         return LABEL_MAP[predicted_class], float(probabilities[predicted_class])
 
 
-# ----- 모델 2: LSTM -----
-from tensorflow.keras.preprocessing.sequence import pad_sequences
-
+# ----- 모델 2: LSTM (tensorflow는 이 모델이 실제로 선택됐을 때만 지연 import) -----
 LSTM_MAX_LEN = 40
 
 
 def _lstm_to_sequences(tokenizer, corpus):
+    from tensorflow.keras.preprocessing.sequence import pad_sequences
+
     sequences = tokenizer.texts_to_sequences(corpus)
     return pad_sequences(sequences, maxlen=LSTM_MAX_LEN, padding="post", truncating="post")
 
 
 def _lstm_load(model_dir: str = "models/lstm"):
+    import tensorflow as tf
+
     model_path = os.path.join(model_dir, "model.h5")
     tokenizer_path = os.path.join(model_dir, "tokenizer.json")
     if not os.path.exists(model_path) or not os.path.exists(tokenizer_path):
@@ -174,14 +178,13 @@ class LSTMModel:
         return LABEL_MAP[predicted_class], confidence
 
 
-# ----- 모델 3: KLUE-BERT -----
-import torch
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
-
+# ----- 모델 3: KLUE-BERT (torch/transformers도 이 모델이 실제로 선택됐을 때만 지연 import) -----
 BERT_MAX_LEN = 64
 
 
 def _bert_load(model_dir: str = "models/klue_bert"):
+    from transformers import AutoModelForSequenceClassification, AutoTokenizer
+
     has_weights = any(
         os.path.exists(os.path.join(model_dir, name))
         for name in ("model.safetensors", "pytorch_model.bin")
@@ -200,6 +203,8 @@ class KlueBertModel:
         self.model = model
 
     def predict_proba(self, raw_text: str):
+        import torch
+
         stripped = raw_text.strip()
         if not stripped:
             raise EmptyInputError("Empty input text")
