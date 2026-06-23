@@ -12,6 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.data.load_nsmc import load_nsmc
 from src.models.lstm import evaluate, save, train
+from scripts.train_utils import mirror_to_submission
 
 ACCURACY_THRESHOLD = 0.85
 MODEL_OUT_DIR = "models/lstm"
@@ -37,6 +38,7 @@ def main():
     with open(os.path.join(MODEL_OUT_DIR, "metrics.json"), "w", encoding="utf-8") as f:
         json.dump(metrics_with_name, f, ensure_ascii=False, indent=2)
 
+    mirror_to_submission(MODEL_OUT_DIR)
     print(f"Saved model artifacts to {MODEL_OUT_DIR}/")
 
 
