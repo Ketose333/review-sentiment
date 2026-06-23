@@ -21,6 +21,7 @@ from src.preprocessing.tokenizer import preprocess_for_vectorizer
 LABEL_MAP = {0: "부정", 1: "긍정"}
 MAX_LEN = 40
 VOCAB_SIZE = 20000
+SEED = 42
 
 
 def build_tokenizer(corpus: pd.Series) -> Tokenizer:
@@ -46,22 +47,23 @@ def build_model() -> Sequential:
     return model
 
 
-def train(train_df: pd.DataFrame, epochs: int = 5, batch_size: int = 256) -> tuple[Tokenizer, Sequential]:
+def train(train_df: pd.DataFrame, epochs: int = 5, batch_size: int = 256) -> tuple[Tokenizer, Sequential, tf.keras.callbacks.History]:
+    tf.keras.utils.set_random_seed(SEED)
     corpus = train_df["document"].map(preprocess_for_vectorizer)
     tokenizer = build_tokenizer(corpus)
     X_train = _to_sequences(tokenizer, corpus)
 
     model = build_model()
-    model.fit(X_train, train_df["label"].to_numpy(), epochs=epochs, batch_size=batch_size, verbose=2)
+    history = model.fit(X_train, train_df["label"].to_numpy(), epochs=epochs, batch_size=batch_size, verbose=2)
 
-    return tokenizer, model
+    return tokenizer, model, history
 
 
-def evaluate(tokenizer: Tokenizer, model: Sequential, test_df: pd.DataFrame) -> dict:
+def evaluate(tokenizer: Tokenizer, model: Sequential, test_df: pd.DataFrame) -> tuple[dict, np.ndarray]:
     corpus = test_df["document"].map(preprocess_for_vectorizer)
     X_test = _to_sequences(tokenizer, corpus)
     y_pred = (model.predict(X_test, verbose=0).ravel() >= 0.5).astype(int)
-    return compute_metrics(test_df["label"], y_pred)
+    return compute_metrics(test_df["label"], y_pred), y_pred
 
 
 def save(tokenizer: Tokenizer, model: Sequential, out_dir: str = "models/lstm") -> None:

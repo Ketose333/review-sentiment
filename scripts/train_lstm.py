@@ -23,10 +23,10 @@ def main():
     print(f"train={len(train_df)} rows, test={len(test_df)} rows")
 
     print("Training LSTM (Embedding -> LSTM -> Dense)...")
-    tokenizer, model = train(train_df)
+    tokenizer, model, _history = train(train_df)
 
     print("Evaluating on test set...")
-    metrics = evaluate(tokenizer, model, test_df)
+    metrics, _y_pred = evaluate(tokenizer, model, test_df)
     print(json.dumps(metrics, indent=2, ensure_ascii=False))
 
     if metrics["accuracy"] < ACCURACY_THRESHOLD:

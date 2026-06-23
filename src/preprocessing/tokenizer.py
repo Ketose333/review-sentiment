@@ -18,6 +18,18 @@ def _register_jvm_dll_dir() -> None:
     """
     if not hasattr(os, "add_dll_directory"):
         return
+
+    # Import TensorFlow (if installed) before the JDK's bin dir goes on the DLL
+    # search path: the JDK ships an older msvcp140/vcruntime140 that, once on the
+    # search path, gets picked up by TensorFlow's native module instead of the
+    # system CRT, crashing with "DLL initialization routine could not be run"
+    # (0x45A). Importing TF first lets it resolve its CRT deps cleanly, regardless
+    # of which model the caller ends up loading later.
+    try:
+        import tensorflow  # noqa: F401
+    except ImportError:
+        pass
+
     java_home = os.environ.get("JAVA_HOME")
     if not java_home:
         return
