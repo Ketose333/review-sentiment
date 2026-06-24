@@ -23,7 +23,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.data.load_nsmc import load_nsmc
 from src.preprocessing.stopwords import KOREAN_STOPWORDS
-from scripts.train_utils import mirror_to_submission
 
 OUT_DIR = "models/eda"
 WORD_SAMPLE_PER_LABEL = 15000
@@ -98,7 +97,6 @@ def main():
     out_path = os.path.join(OUT_DIR, "stats.json")
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(stats, f, ensure_ascii=False, indent=2)
-    mirror_to_submission(OUT_DIR)
     print(f"Saved EDA stats to {out_path} (word_tokenizer={tokenizer_name})")
 
 
