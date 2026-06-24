@@ -29,10 +29,6 @@ WORD_SAMPLE_PER_LABEL = 15000
 TOP_N_WORDS = 20
 LENGTH_BINS = 20
 
-_HANGUL_PATTERN = re.compile(r"[^ㄱ-ㅎㅏ-ㅣ가-힣\s]")
-# Common trailing particles (조사) stripped to approximate stemming in the fallback path.
-_PARTICLE_SUFFIXES = ("으로", "에서", "에게", "은", "는", "이", "가", "을", "를", "에", "의", "도", "와", "과", "로")
-
 
 def _make_tokenizer():
     """Returns (tokenize_fn, name). Prefers Okt; falls back to a regex tokenizer."""

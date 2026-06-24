@@ -1,7 +1,7 @@
 {
   "display_name": "LSTM",
-  "accuracy": 0.8417,
-  "precision": 0.8455,
-  "recall": 0.8388,
-  "f1": 0.8421
+  "accuracy": 0.8238,
+  "precision": 0.871,
+  "recall": 0.7631,
+  "f1": 0.8135
 }
