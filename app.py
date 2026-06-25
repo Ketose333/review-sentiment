@@ -12,13 +12,46 @@ import streamlit as st
 import re
 
 
+# >>> AUTO-SYNCED from src/preprocessing/stopwords.py (run scripts/sync_standalone_app.py) >>>
+KOREAN_STOPWORDS: set[str] = {
+    "의", "가", "이", "은", "들", "는", "좀", "잘", "걍", "과",
+    "도", "를", "으로", "자", "에", "와", "한", "하다", "에서", "께서",
+    "이다", "있다", "되다", "그", "저", "것", "수", "등", "들이", "에게",
+    "보다", "만", "에는", "라서", "이라", "랑", "이랑", "거", "것을",
+    "다", "을", "고", "지", "면", "게", "도요",
+}
+# <<< AUTO-SYNCED <<<
+
+
+# >>> AUTO-SYNCED from src/preprocessing/tokenizer.py (run scripts/sync_standalone_app.py) >>>
+import os
+
+
+import re
+
+
 def _register_jvm_dll_dir() -> None:
+    """Windows: put the JDK's jvm.dll on the DLL search path before konlpy imports jpype.
+
+    `_jpype.pyd` depends on jvm.dll at import time; konlpy/jpype don't register its
+    directory, so standalone scripts (e.g. compute_eda.py) fail with
+    "DLL load failed while importing _jpype". No-op on Linux/macOS — os.add_dll_directory
+    doesn't exist there (Streamlit Cloud installs the JVM via packages.txt instead).
+    """
     if not hasattr(os, "add_dll_directory"):
         return
+
+    # Import TensorFlow (if installed) before the JDK's bin dir goes on the DLL
+    # search path: the JDK ships an older msvcp140/vcruntime140 that, once on the
+    # search path, gets picked up by TensorFlow's native module instead of the
+    # system CRT, crashing with "DLL initialization routine could not be run"
+    # (0x45A). Importing TF first lets it resolve its CRT deps cleanly, regardless
+    # of which model the caller ends up loading later.
     try:
-        import tensorflow  # noqa: F401  (Windows에서 Okt/jpype보다 먼저 import해야 DLL 충돌을 피함)
+        import tensorflow  # noqa: F401
     except ImportError:
         pass
+
     java_home = os.environ.get("JAVA_HOME")
     if not java_home:
         return
@@ -33,28 +66,34 @@ def _register_jvm_dll_dir() -> None:
 
 _register_jvm_dll_dir()
 
+
 from konlpy.tag import Okt
 
-KOREAN_STOPWORDS: set[str] = {
-    "의", "가", "이", "은", "들", "는", "좀", "잘", "걍", "과",
-    "도", "를", "으로", "자", "에", "와", "한", "하다", "에서", "께서",
-    "이다", "있다", "되다", "그", "저", "것", "수", "등", "들이", "에게",
-    "보다", "만", "에는", "라서", "이라", "랑", "이랑", "거", "것을",
-    "다", "을", "고", "지", "면", "게", "도요",
-}
 
 _HANGUL_PATTERN = re.compile(r"[^ㄱ-ㅎㅏ-ㅣ가-힣\s]")
+
+
 _okt = Okt()
 
 
 def clean_text(text: str) -> str:
+    """Strips text down to Korean syllables/jamo and whitespace only.
+
+    Removes emoji, special characters, punctuation, digits, and Latin script.
+    """
     return _HANGUL_PATTERN.sub("", text or "")
 
 
 def tokenize(text: str, remove_stopwords: bool = True) -> list[str]:
+    """Cleans, morphologically tokenizes (Okt, stemmed), and filters stopwords/empties.
+
+    Returns [] for empty/whitespace-only/non-Korean input — callers must handle the
+    empty-list case explicitly (PRD §14 edge cases: special chars / emoji-only input).
+    """
     cleaned = clean_text(text).strip()
     if not cleaned:
         return []
+
     morphs = _okt.morphs(cleaned, stem=True)
     tokens = [m for m in morphs if m.strip()]
     if remove_stopwords:
@@ -63,7 +102,10 @@ def tokenize(text: str, remove_stopwords: bool = True) -> list[str]:
 
 
 def preprocess_for_vectorizer(text: str) -> str:
+    """tokenize(text) joined with single spaces — the exact string consumed by
+    the TF-IDF vectorizer at both train time and inference time."""
     return " ".join(tokenize(text))
+# <<< AUTO-SYNCED <<<
 
 
 import glob
