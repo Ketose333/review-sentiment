@@ -66,40 +66,40 @@ def preprocess_for_vectorizer(text: str) -> str:
     return " ".join(tokenize(text))
 
 
+import glob
+
+# >>> AUTO-SYNCED from src/models/base.py (run scripts/sync_standalone_app.py) >>>
 class ModelLoadError(Exception):
-    pass
+    """Raised when a model's artifacts cannot be loaded (missing/corrupt files)."""
 
 
 class EmptyInputError(Exception):
-    pass
+    """Raised when preprocessing yields no tokens for the given input (PRD §14 edge case)."""
+# <<< AUTO-SYNCED <<<
 
 
-import glob
-
-from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
-
-
-def compute_metrics(y_true, y_pred) -> dict:
-    return {
-        "accuracy": round(float(accuracy_score(y_true, y_pred)), 4),
-        "precision": round(float(precision_score(y_true, y_pred, average="binary")), 4),
-        "recall": round(float(recall_score(y_true, y_pred, average="binary")), 4),
-        "f1": round(float(f1_score(y_true, y_pred, average="binary")), 4),
-    }
-
-
-def build_comparison_table(results: dict) -> pd.DataFrame:
+# >>> AUTO-SYNCED from src/evaluation/metrics.py (run scripts/sync_standalone_app.py) >>>
+def build_comparison_table(results: dict[str, dict]) -> pd.DataFrame:
+    """results = {model_display_name: {"accuracy":..., "precision":..., "recall":..., "f1":...}}."""
     if not results:
         return pd.DataFrame(columns=["Accuracy", "Precision", "Recall", "F1"])
+
     df = pd.DataFrame(results).T
     df = df.rename(
-        columns={"accuracy": "Accuracy", "precision": "Precision", "recall": "Recall", "f1": "F1"}
+        columns={
+            "accuracy": "Accuracy",
+            "precision": "Precision",
+            "recall": "Recall",
+            "f1": "F1",
+        }
     )
     return df[["Accuracy", "Precision", "Recall", "F1"]]
 
 
-def load_all_metrics(models_dir: str = "models") -> dict:
-    results: dict = {}
+def load_all_metrics(models_dir: str = "models") -> dict[str, dict]:
+    """Scans models/*/metrics.json. Model display name comes from a "display_name" key
+    inside each metrics.json (falls back to the directory name if absent)."""
+    results: dict[str, dict] = {}
     for metrics_path in sorted(glob.glob(os.path.join(models_dir, "*", "metrics.json"))):
         with open(metrics_path, encoding="utf-8") as f:
             data = json.load(f)
@@ -107,6 +107,7 @@ def load_all_metrics(models_dir: str = "models") -> dict:
         display_name = data.pop("display_name", model_dir_name)
         results[display_name] = data
     return results
+# <<< AUTO-SYNCED <<<
 
 
 # ----- 모델 1: TF-IDF + LogisticRegression -----
@@ -244,19 +245,22 @@ def load_model(display_name: str):
 import numpy as np
 from lime.lime_text import LimeTextExplainer
 
-_LIME_CLASS_NAMES = ["부정", "긍정"]
-_LIME_LABEL_TO_INDEX = {"부정": 0, "긍정": 1}
+# >>> AUTO-SYNCED from src/explainability/lime_explainer.py (run scripts/sync_standalone_app.py) >>>
+_CLASS_NAMES = ["부정", "긍정"]
+
+
+_LABEL_TO_INDEX = {"부정": 0, "긍정": 1}
 
 
 def _make_classifier_fn(model):
-    def classifier_fn(texts):
+    def classifier_fn(texts: list[str]) -> np.ndarray:
         probs = np.full((len(texts), 2), 0.5)
         for i, text in enumerate(texts):
             try:
                 label, confidence = model.predict_proba(text)
             except EmptyInputError:
                 continue
-            idx = _LIME_LABEL_TO_INDEX[label]
+            idx = _LABEL_TO_INDEX[label]
             probs[i, idx] = confidence
             probs[i, 1 - idx] = 1 - confidence
         return probs
@@ -264,8 +268,12 @@ def _make_classifier_fn(model):
     return classifier_fn
 
 
-def explain(model, text: str, num_features: int = 8, num_samples: int = 300):
-    explainer = LimeTextExplainer(class_names=_LIME_CLASS_NAMES)
+def explain(model, text: str, num_features: int = 8, num_samples: int = 300) -> list[tuple[str, float]]:
+    """Returns [(word, weight), ...] for the predicted-긍정 direction.
+
+    Positive weight pushes the prediction toward 긍정, negative toward 부정.
+    """
+    explainer = LimeTextExplainer(class_names=_CLASS_NAMES)
     exp = explainer.explain_instance(
         text,
         _make_classifier_fn(model),
@@ -274,6 +282,7 @@ def explain(model, text: str, num_features: int = 8, num_samples: int = 300):
         labels=(1,),
     )
     return exp.as_list(label=1)
+# <<< AUTO-SYNCED <<<
 
 
 st.set_page_config(page_title="review-sentiment", page_icon="🎬", layout="wide")
