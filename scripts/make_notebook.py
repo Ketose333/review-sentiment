@@ -40,7 +40,12 @@ def inline_module(path: str) -> str:
     source = open(path, encoding="utf-8").read()
     tree = ast.parse(source)
     lines = source.splitlines(keepends=True)
-    parts = []
+    # Consecutive import statements are joined tightly (single newline); any
+    # other statement (def/class/constant) starts a new chunk separated by a
+    # blank-line gap, so inlined imports don't look inconsistently spaced
+    # next to the cell's own hand-written import header.
+    chunks: list[str] = []
+    import_buf: list[str] = []
     for i, node in enumerate(tree.body):
         if i == 0 and isinstance(node, ast.Expr) and isinstance(getattr(node, "value", None), ast.Constant) and isinstance(node.value.value, str):
             continue  # module docstring
@@ -50,8 +55,17 @@ def inline_module(path: str) -> str:
             continue  # internal cross-module ref — already defined by an earlier cell
         decorators = getattr(node, "decorator_list", [])
         start = min([d.lineno for d in decorators] + [node.lineno])
-        parts.append("".join(lines[start - 1 : node.end_lineno]).rstrip("\n"))
-    return "\n\n\n".join(parts) + "\n"
+        text = "".join(lines[start - 1 : node.end_lineno]).rstrip("\n")
+        if isinstance(node, (ast.Import, ast.ImportFrom)):
+            import_buf.append(text)
+            continue
+        if import_buf:
+            chunks.append("\n".join(import_buf))
+            import_buf = []
+        chunks.append(text)
+    if import_buf:
+        chunks.append("\n".join(import_buf))
+    return "\n\n\n".join(chunks) + "\n"
 
 
 # ===== 0. 제목 =====

@@ -25,8 +25,6 @@ KOREAN_STOPWORDS: set[str] = {
 
 # >>> AUTO-SYNCED from src/preprocessing/tokenizer.py (run scripts/sync_standalone_app.py) >>>
 import os
-
-
 import re
 
 
