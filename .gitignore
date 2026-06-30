@@ -8,6 +8,9 @@ env/
 # ML artifacts: tracked via Git LFS (.gitattributes), not excluded here
 /data/
 
+# Submission/report artifacts: local-only, never tracked in git
+/submission/
+
 # Streamlit / secrets
 .streamlit/secrets.toml
 .env
