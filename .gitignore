@@ -5,7 +5,14 @@ __pycache__/
 venv/
 env/
 
-# ML artifacts: tracked via Git LFS (.gitattributes), not excluded here
+# ML model weight files: hosted on HF Hub dataset repo (Ketose333/review-sentiment-assets)
+# instead of Git LFS — the account-wide LFS budget was exhausted and blocked clones.
+# app.py downloads them on demand via huggingface_hub (see _resolve() in app.py).
+/models/klue_bert/model.safetensors
+/models/lstm/model.h5
+/models/tfidf_lr/model.pkl
+/models/tfidf_lr/vectorizer.pkl
+
 /data/
 
 # Submission/report artifacts: local-only, never tracked in git
