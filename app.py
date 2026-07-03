@@ -150,6 +150,31 @@ def load_all_metrics(models_dir: str = "models") -> dict[str, dict]:
 # <<< AUTO-SYNCED <<<
 
 
+# Model weight files (*.pkl/*.h5/*.safetensors) are no longer tracked in this git
+# repo (Git LFS on the free tier hit the account-wide budget and blocked clones —
+# see music-mood-recs' identical _resolve() pattern). They live in this public HF
+# dataset repo instead, keyed by the same relative path used locally
+# (e.g. "models/klue_bert/model.safetensors"). local_dir="." downloads straight to
+# that relative path so directory-based loaders (transformers' from_pretrained)
+# still find the weights alongside config.json/tokenizer files.
+HF_ASSETS_REPO = os.environ.get("RS_HF_ASSETS_REPO", "Ketose333/review-sentiment-assets")
+
+
+def _resolve(rel_path: str) -> str:
+    """Returns a local path usable for rel_path, downloading it from
+    HF_ASSETS_REPO on first access if it isn't already present on disk."""
+    if os.path.exists(rel_path):
+        return rel_path
+    from huggingface_hub import hf_hub_download
+
+    return hf_hub_download(
+        repo_id=HF_ASSETS_REPO,
+        repo_type="dataset",
+        filename=rel_path.replace(os.sep, "/"),
+        local_dir=".",
+    )
+
+
 # ----- 모델 1: TF-IDF + LogisticRegression -----
 import joblib
 
@@ -159,9 +184,7 @@ LABEL_MAP = {0: "부정", 1: "긍정"}
 def _tfidf_load(model_dir: str = "models/tfidf_lr"):
     vectorizer_path = os.path.join(model_dir, "vectorizer.pkl")
     model_path = os.path.join(model_dir, "model.pkl")
-    if not os.path.exists(vectorizer_path) or not os.path.exists(model_path):
-        raise ModelLoadError(f"TF-IDF model artifacts not found in {model_dir}")
-    return joblib.load(vectorizer_path), joblib.load(model_path)
+    return joblib.load(_resolve(vectorizer_path)), joblib.load(_resolve(model_path))
 
 
 class TfidfLRModel:
@@ -195,9 +218,9 @@ def _lstm_load(model_dir: str = "models/lstm"):
 
     model_path = os.path.join(model_dir, "model.h5")
     tokenizer_path = os.path.join(model_dir, "tokenizer.json")
-    if not os.path.exists(model_path) or not os.path.exists(tokenizer_path):
+    if not os.path.exists(tokenizer_path):
         raise ModelLoadError(f"LSTM model artifacts not found in {model_dir}")
-    model = tf.keras.models.load_model(model_path)
+    model = tf.keras.models.load_model(_resolve(model_path))
     with open(tokenizer_path, encoding="utf-8") as f:
         tokenizer = tf.keras.preprocessing.text.tokenizer_from_json(f.read())
     return tokenizer, model
@@ -231,7 +254,7 @@ def _bert_load(model_dir: str = "models/klue_bert"):
         for name in ("model.safetensors", "pytorch_model.bin")
     )
     if not has_weights:
-        raise ModelLoadError(f"KLUE-BERT model artifacts not found in {model_dir}")
+        _resolve(os.path.join(model_dir, "model.safetensors"))
     tokenizer = AutoTokenizer.from_pretrained(model_dir)
     model = AutoModelForSequenceClassification.from_pretrained(model_dir)
     model.eval()

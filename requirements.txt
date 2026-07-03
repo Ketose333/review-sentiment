@@ -4,6 +4,7 @@ pandas>=2.0
 numpy>=1.26
 konlpy>=0.6.0
 joblib>=1.3
+huggingface_hub>=0.25
 lime>=0.2.0.1
 tensorflow>=2.21
 torch>=2.12
