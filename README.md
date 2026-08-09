@@ -1,3 +1,5 @@
+<a id="readme-top"></a>
+
 # review-sentiment
 
 NSMC(Naver Sentiment Movie Corpus) 기반 한국어 영화 리뷰 감성 분석 웹앱. TF-IDF·LSTM·KLUE-BERT 3개 모델을 비교하고, LIME으로 예측 근거 단어를 시각화한다. 머신러닝 수업 과제로 시작한 프로젝트이며, Streamlit Cloud에 배포되어 있다.
@@ -7,12 +9,14 @@ NSMC(Naver Sentiment Movie Corpus) 기반 한국어 영화 리뷰 감성 분석 
 ![scikit--learn](https://img.shields.io/badge/scikit--learn-F7931E?style=flat-square&logo=scikitlearn&logoColor=white)
 ![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)
 
+[**라이브 데모 »**](https://nsmc-sentiment.streamlit.app)
+
 ## 목차
 
 1. [배경](#배경)
 2. [데이터](#데이터)
 3. [파이프라인](#파이프라인)
-4. [진행 현황](#진행-현황)
+4. [로드맵](#로드맵)
 5. [모델 비교](#모델-비교)
 6. [기능](#기능)
 7. [프로젝트 현황](#프로젝트-현황)
@@ -21,6 +25,8 @@ NSMC(Naver Sentiment Movie Corpus) 기반 한국어 영화 리뷰 감성 분석 
 10. [모델 학습](#모델-학습-이미-학습된-아티팩트가-models에-있으면-건너뛰어도-됨)
 11. [앱 실행](#앱-실행)
 12. [배포 (Streamlit Cloud)](#배포-streamlit-cloud)
+13. [라이선스](#라이선스)
+14. [연락처](#연락처)
 
 ## 배경
 
@@ -59,7 +65,7 @@ NSMC 원본(.txt)
                       └─ app.py (Streamlit)  모델 선택 → 예측/비교/EDA 탭 → 배포
 ```
 
-## 진행 현황
+## 로드맵
 
 - [x] NSMC 로드·전처리 (Okt 형태소 분석 + 불용어 제거)
 - [x] TF-IDF·LSTM·KLUE-BERT 3개 모델 학습·평가
@@ -170,3 +176,17 @@ streamlit run app.py
 3. `packages.txt`로 JDK 자동 설치됨
 4. **⚠️ Python 버전 고정 필수**: Streamlit Cloud는 기본적으로 최신 Python(예: 3.14)을 띄우는데, `tensorflow`는 해당 버전용 wheel이 아직 없어 `pip install`이 통째로 실패한다(`No matching distribution found for tensorflow`). 앱 대시보드 **⋮ → Settings → Python version**에서 **3.11**을 선택할 것. (`runtime.txt`도 3.11로 두지만, 확실한 적용은 대시보드 설정이다.)
 5. 로컬 Streamlit fallback이 필요하면 `streamlit run app.py`로 실행한다.
+
+<p align="right">(<a href="#readme-top">맨 위로</a>)</p>
+
+## 라이선스
+
+- 코드: 별도 오픈소스 라이선스는 지정되어 있지 않습니다.
+- 데이터: NSMC — CC0 1.0 Universal
+
+## 연락처
+
+- GitHub: [Ketose333](https://github.com/Ketose333)
+- 문의: 이 저장소의 GitHub Issues
+
+<p align="right">(<a href="#readme-top">맨 위로</a>)</p>
