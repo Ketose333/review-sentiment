@@ -217,7 +217,7 @@ streamlit run app.py
 <p align="right">(<a href="#readme-top">맨 위로</a>)</p>
 
 <!-- PORTFOLIO:FACTS:START -->
-- 기간: 2026.06.21 ~ 2026.07.03 (completed)
+- 기간: 2026.06.21 ~ 2026.07.03 (12일) (completed)
 - 현재 스택: Python, PyTorch, KLUE-BERT, Streamlit
 - 현재 설명: KLUE-BERT 감성 분류와 모델 비교를 제공하는 Streamlit 앱
 - 저장소: https://github.com/Ketose333/review-sentiment
