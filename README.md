@@ -4,7 +4,6 @@
 
 NSMC(Naver Sentiment Movie Corpus) 기반 한국어 영화 리뷰 감성 분석 웹앱. TF-IDF·LSTM·KLUE-BERT 3개 모델을 비교하고, LIME으로 예측 근거 단어를 시각화한다. 머신러닝 수업 과제로 시작한 프로젝트이며, Streamlit Cloud에 배포되어 있다.
 
-[![Live Demo](https://img.shields.io/badge/Live_Demo-Streamlit-FF4B4B?style=flat-square&logo=streamlit&logoColor=white)](https://nsmc-sentiment.streamlit.app)
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)
 ![scikit--learn](https://img.shields.io/badge/scikit--learn-F7931E?style=flat-square&logo=scikitlearn&logoColor=white)
 ![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)
@@ -28,10 +27,14 @@ NSMC(Naver Sentiment Movie Corpus) 기반 한국어 영화 리뷰 감성 분석 
 13. [라이선스](#라이선스)
 14. [연락처](#연락처)
 
+<p align="right">(<a href="#readme-top">맨 위로</a>)</p>
+
 ## 배경
 
 영화 리뷰의 평점과 실제 리뷰 텍스트 감성이 항상 일치하지 않는 경우가 많아(예: 평점은 높지만 비판적인 리뷰), 텍스트 자체에서 감성을 직접 분류하는 모델이 필요하다. 이 프로젝트는 머신러닝 수업 과제로 시작했으며, 동일한 한국어 감성 분류 문제를 **고전적 ML(TF-IDF+LogisticRegression) → 딥러닝(LSTM) → 사전학습 언어모델(KLUE-BERT)** 3단계로 풀어보고 성능·해석가능성 트레이드오프를 비교하는 데 목적을 둔다.
 
+
+<p align="right">(<a href="#readme-top">맨 위로</a>)</p>
 
 ## 데이터
 
@@ -52,6 +55,8 @@ NSMC(Naver Sentiment Movie Corpus) 기반 한국어 영화 리뷰 감성 분석 
 
 > NSMC는 평점 5~8점(중립권) 리뷰를 원천 제외하고 구성된 데이터셋이라, label은 "평점이 아니라 리뷰 텍스트의 감성 자체"를 학습하도록 설계되어 있다.
 
+<p align="right">(<a href="#readme-top">맨 위로</a>)</p>
+
 ## 파이프라인
 
 ```
@@ -64,6 +69,8 @@ NSMC 원본(.txt)
                  └─ src/explainability/lime_explainer.py   예측 근거 단어 추출
                       └─ app.py (Streamlit)  모델 선택 → 예측/비교/EDA 탭 → 배포
 ```
+
+<p align="right">(<a href="#readme-top">맨 위로</a>)</p>
 
 ## 로드맵
 
@@ -78,6 +85,8 @@ NSMC 원본(.txt)
 
 > 상세 항목·비고는 [기능](#기능) 표, 인프라·이슈는 [docs/STATUS.md](docs/STATUS.md) 참고.
 
+<p align="right">(<a href="#readme-top">맨 위로</a>)</p>
+
 ## 모델 비교
 
 | 모델 | Accuracy | F1 | 특징 / 채택 이유 |
@@ -87,6 +96,8 @@ NSMC 원본(.txt)
 | **KLUE-BERT (fine-tuned)** | **0.870** | **0.873** | 3개 중 최고 성능. CPU 제약으로 서브셋(train 1.8만/test 5천, 2 epoch) 학습했음에도 사전학습 언어모델 이점이 뚜렷함 — **최종 채택** |
 
 > 성능 수치는 모두 **로컬/CPU 실측치**. KLUE-BERT는 GPU·풀데이터 환경에서 0.90+ 기대(상세 근거는 보고서·`docs/prd.md` 참고).
+
+<p align="right">(<a href="#readme-top">맨 위로</a>)</p>
 
 ## 기능
 
@@ -105,9 +116,13 @@ NSMC 원본(.txt)
 
 > 모델별 성능 수치·채택 이유는 [모델 비교](#모델-비교) 참고.
 
+<p align="right">(<a href="#readme-top">맨 위로</a>)</p>
+
 ## 프로젝트 현황
 
 → **[docs/STATUS.md](docs/STATUS.md)** — 인프라 상태, 모델별 학습 완료 여부, 다음 작업, 알려진 이슈를 추적하는 작업 로그.
+
+<p align="right">(<a href="#readme-top">맨 위로</a>)</p>
 
 ## 디렉터리 구조
 
@@ -139,6 +154,8 @@ docs/
   prd.md                    제품 요구사항 (데이터셋/모델/배포/제출 경로 결정 기준)
 ```
 
+<p align="right">(<a href="#readme-top">맨 위로</a>)</p>
+
 ## 로컬 환경 셋업
 
 ```bash
@@ -147,6 +164,8 @@ pip install -r requirements.txt   # tensorflow/torch/transformers 포함, 용량
 ```
 
 **konlpy(Okt) 의존성**: JVM 필요. 로컬은 JDK 설치 + `JAVA_HOME` 설정 필요. Streamlit Cloud는 `packages.txt`(`default-jdk`)로 자동 설치됨.
+
+<p align="right">(<a href="#readme-top">맨 위로</a>)</p>
 
 ## 모델 학습 (이미 학습된 아티팩트가 models/에 있으면 건너뛰어도 됨)
 
@@ -161,6 +180,8 @@ python scripts/compute_eda.py       # EDA 통계 생성 → models/eda/stats.jso
 
 각 스크립트는 첫 실행 시 NSMC를 `data/`에 자동 다운로드한다(.gitignore 처리됨, 매번 다시 받을 필요 없음).
 
+<p align="right">(<a href="#readme-top">맨 위로</a>)</p>
+
 ## 앱 실행
 
 ```bash
@@ -168,6 +189,8 @@ streamlit run app.py
 ```
 
 사이드바에서 모델 선택(TF-IDF+LR / LSTM / KLUE-BERT) → "🔍 예측" 탭에서 리뷰 입력 → 예측 결과 + LIME 단어별 기여도 시각화. "📊 모델 성능 비교" 탭에서 학습된 모델들의 정확도/F1 비교.
+
+<p align="right">(<a href="#readme-top">맨 위로</a>)</p>
 
 ## 배포 (Streamlit Cloud)
 
@@ -183,6 +206,8 @@ streamlit run app.py
 
 - 코드: 별도 오픈소스 라이선스는 지정되어 있지 않습니다.
 - 데이터: NSMC — CC0 1.0 Universal
+
+<p align="right">(<a href="#readme-top">맨 위로</a>)</p>
 
 ## 연락처
 
