@@ -16,7 +16,6 @@ NSMC(Naver Sentiment Movie Corpus) 기반 한국어 영화 리뷰 감성 분석 
 - 현재 설명: KLUE-BERT 감성 분류와 모델 비교를 제공하는 Streamlit 앱
 - 저장소: https://github.com/Ketose333/review-sentiment
 - 데모: https://nsmc-sentiment.streamlit.app
-- PDF: reviewsentiment.pdf
 <!-- PORTFOLIO:FACTS:END -->
 
 ## 목차
