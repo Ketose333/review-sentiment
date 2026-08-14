@@ -100,10 +100,10 @@ NSMC 원본(.txt)
 | 모델 | Accuracy | F1 | 특징 / 채택 이유 |
 | --- | --- | --- | --- |
 | TF-IDF + LogisticRegression | 0.837 | 0.836 | 가장 가볍고 빠름, LIME 근거가 단어 단위로 가장 직관적 — 해석용 베이스라인 |
-| LSTM (Embedding→LSTM→Dense) | 0.842 | 0.842 | TF-IDF와 KLUE-BERT 사이 절충안, CPU로 전체 15만 행 학습(단 train acc 0.904로 약간 과적합) |
-| **KLUE-BERT (fine-tuned)** | **0.870** | **0.873** | 3개 중 최고 성능. CPU 제약으로 서브셋(train 1.8만/test 5천, 2 epoch) 학습했음에도 사전학습 언어모델 이점이 뚜렷함 — **최종 채택** |
+| LSTM (Embedding→LSTM→Dense) | 0.824 | 0.814 | CPU로 전체 15만 행 학습했으나 정밀도 0.871 대비 재현율 0.763으로 낮아 F1이 TF-IDF 베이스라인에도 못 미침 — 과적합 경향 |
+| **KLUE-BERT (fine-tuned)** | **0.878** | **0.881** | 3개 중 최고 성능. CPU 제약으로 서브셋(train 1.8만/test 5천, 2 epoch) 학습했음에도 사전학습 언어모델 이점이 뚜렷함 — **최종 채택** |
 
-> 성능 수치는 모두 **로컬/CPU 실측치**. KLUE-BERT는 GPU·풀데이터 환경에서 0.90+ 기대(상세 근거는 보고서·`docs/prd.md` 참고).
+> 성능 수치는 모두 **로컬/CPU 실측치**이며 `models/*/metrics.json`(앱 "모델 성능 비교" 탭이 런타임에 읽는 파일)과 같은 값이다. KLUE-BERT는 GPU·풀데이터 환경에서 0.90+ 기대(상세 근거는 보고서·`docs/prd.md` 참고).
 
 <p align="right">(<a href="#readme-top">맨 위로</a>)</p>
 
@@ -113,8 +113,8 @@ NSMC 원본(.txt)
 | --- | --- | --- |
 | NSMC 로드·전처리 (Okt 형태소 분석 + 불용어 제거) | ✅ | `src/data/load_nsmc.py`, `src/preprocessing/` |
 | TF-IDF + LogisticRegression 학습·평가 | ✅ | **Acc 0.837 / F1 0.836** (`models/tfidf_lr/`) |
-| LSTM (Embedding→LSTM→Dense) 학습·평가 | ✅ | **Acc 0.842 / F1 0.842**, CPU 전체데이터 15만 행 |
-| KLUE-BERT fine-tuning 학습·평가 | ✅ | **Acc 0.870 / F1 0.873**, CPU 서브셋(train 1.8만/test 5천, 2 epoch) |
+| LSTM (Embedding→LSTM→Dense) 학습·평가 | ✅ | **Acc 0.824 / F1 0.814**, CPU 전체데이터 15만 행 |
+| KLUE-BERT fine-tuning 학습·평가 | ✅ | **Acc 0.878 / F1 0.881**, CPU 서브셋(train 1.8만/test 5천, 2 epoch) |
 | 모델 성능 비교 (Accuracy/Precision/Recall/F1) | ✅ | 앱 "모델 성능 비교" 탭, 그룹 막대그래프 + F1 기준 최고 모델 강조 |
 | LIME 예측 근거 단어 시각화 | ✅ | `src/explainability/lime_explainer.py`, 예측 탭 막대그래프 |
 | EDA (레이블 분포·리뷰 길이 분포·레이블별 빈출 단어 TOP20) | ✅ | 앱 "데이터 탐색(EDA)" 탭, `scripts/compute_eda.py`로 사전계산 → `models/eda/stats.json` |
@@ -179,8 +179,8 @@ pip install -r requirements.txt   # tensorflow/torch/transformers 포함, 용량
 
 ```bash
 python scripts/train_tfidf_lr.py    # 완료됨 — models/tfidf_lr/
-python scripts/train_lstm.py        # 완료됨 — models/lstm/ (Acc 0.8417, CPU 전체데이터)
-python scripts/train_klue_bert.py   # 완료됨 — models/klue_bert/ (Acc 0.87 / F1 0.8733, CPU 서브셋)
+python scripts/train_lstm.py        # 완료됨 — models/lstm/ (Acc 0.8238 / F1 0.8135, CPU 전체데이터)
+python scripts/train_klue_bert.py   # 완료됨 — models/klue_bert/ (Acc 0.878 / F1 0.8811, CPU 서브셋)
 python scripts/compute_eda.py       # EDA 통계 생성 → models/eda/stats.json (앱 "데이터 탐색" 탭이 로드)
 ```
 
