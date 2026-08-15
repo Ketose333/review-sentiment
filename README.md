@@ -32,8 +32,9 @@ NSMC(Naver Sentiment Movie Corpus) 기반 한국어 영화 리뷰 감성 분석 
 10. [모델 학습](#모델-학습-이미-학습된-아티팩트가-models에-있으면-건너뛰어도-됨)
 11. [앱 실행](#앱-실행)
 12. [배포 (Streamlit Cloud)](#배포-streamlit-cloud)
-13. [라이선스](#라이선스)
-14. [연락처](#연락처)
+13. [상시 유지 (Keep-Alive)](#상시-유지-keep-alive)
+14. [라이선스](#라이선스)
+15. [연락처](#연락처)
 
 <p align="right">(<a href="#readme-top">맨 위로</a>)</p>
 
@@ -207,6 +208,14 @@ streamlit run app.py
 3. `packages.txt`로 JDK 자동 설치됨
 4. **⚠️ Python 버전 고정 필수**: Streamlit Cloud는 기본적으로 최신 Python(예: 3.14)을 띄우는데, `tensorflow`는 해당 버전용 wheel이 아직 없어 `pip install`이 통째로 실패한다(`No matching distribution found for tensorflow`). 앱 대시보드 **⋮ → Settings → Python version**에서 **3.11**을 선택할 것. (`runtime.txt`도 3.11로 두지만, 확실한 적용은 대시보드 설정이다.)
 5. 로컬 Streamlit fallback이 필요하면 `streamlit run app.py`로 실행한다.
+
+<p align="right">(<a href="#readme-top">맨 위로</a>)</p>
+
+## 상시 유지 (Keep-Alive)
+
+Streamlit Community Cloud 무료 티어는 일정 기간 트래픽이 없으면 앱이 슬립 상태로 전환된다.
+`.github/workflows/keep_alive.yml`이 12시간마다 앱 URL에 핑을 보내 슬립을 방지하며,
+워크플로우 자신의 실행 기록도 최근 10개만 남기고 자동 정리해 무한정 쌓이지 않는다.
 
 <p align="right">(<a href="#readme-top">맨 위로</a>)</p>
 
