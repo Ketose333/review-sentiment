@@ -10,7 +10,7 @@
 | --- | --- |
 | 모델 아티팩트 관리 | Git LFS (`*.pkl`, `*.h5`, `*.bin`, `*.safetensors`, `*.pt`, `*.onnx`) |
 | Streamlit 배포 | ✅ 배포됨 — https://nsmc-sentiment.streamlit.app (Public) |
-| Streamlit keep-alive | ✅ Playwright Chromium으로 6시간마다 방문·wake·앱 본문 로딩 검증 (PR #6) |
+| Streamlit keep-alive | ✅ 공통 canonical Playwright로 6시간마다 방문·wake·앱 본문 로딩 검증 (PR #6, #8) |
 | Streamlit Python 버전 | **3.11 고정 필수** — 대시보드 ⋮ → Settings → Python version. 미고정 시 Python 3.14가 떠 tensorflow wheel 부재로 배포 크래시. `runtime.txt`(3.11)도 두지만 대시보드 설정이 확실함 |
 | Java/JVM (Okt) | 로컬 JDK 17, Streamlit Cloud는 `packages.txt`(`default-jdk`)로 자동 설치 |
 
