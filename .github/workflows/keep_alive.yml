@@ -32,7 +32,8 @@ jobs:
           npm install --no-save --no-package-lock playwright@1.62.1
           npx playwright install --with-deps chromium
 
-      - name: Streamlit 앱 깨우기 및 로딩 확인
+      - name: 앱 방문 및 로딩 확인
         env:
-          STREAMLIT_APP_URL: https://nsmc-sentiment.streamlit.app
-        run: node .github/scripts/keep_streamlit_awake.mjs
+          APP_URL: https://nsmc-sentiment.streamlit.app
+          APP_READY_TEXT: 영화 리뷰 감성 분석
+        run: node .github/scripts/keep_alive.mjs
