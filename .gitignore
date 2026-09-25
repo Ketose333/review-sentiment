@@ -30,3 +30,4 @@ Thumbs.db
 .vscode/
 
 /.artifacts/
+/.vercel/

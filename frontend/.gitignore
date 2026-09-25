@@ -1,4 +1,6 @@
 node_modules/
+.codex-deps/
+.npm-cache/
 .next/
 out/
 .env*.local
