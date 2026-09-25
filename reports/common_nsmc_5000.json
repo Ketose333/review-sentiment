@@ -1,0 +1,104 @@
+{
+  "evaluatedAtUtc": "2026-09-23T15:30:14.833545+00:00",
+  "dataSource": "https://raw.githubusercontent.com/e9t/nsmc/eafdd77e310f399a4d0083a58ade40b55a5a308d/ratings_test.txt",
+  "dataSha256": "8ac9f64052f11dbf6ae0acb5e038f03d90a76f0eda7820cfb3a92d02edfcebda",
+  "filteredTestRows": 49997,
+  "sampleMethod": "dropna(document), reset_index(drop=True), sample(n=5000, random_state=42), reset_index(drop=True)",
+  "sampleSize": 5000,
+  "sampleSeed": 42,
+  "sampleSha256": "277576170352d11980616d54858a15fb9f73741c7598e16bd27f3fff9f36a30b",
+  "metricDefinition": "sklearn binary precision/recall/F1 with positive label 1; four decimal places",
+  "models": {
+    "tfidf_lr": {
+      "status": "succeeded",
+      "modelId": "tfidf_lr",
+      "metrics": {
+        "accuracy": 0.8282,
+        "precision": 0.8288,
+        "recall": 0.8245,
+        "f1": 0.8266
+      },
+      "sampleSha256": "277576170352d11980616d54858a15fb9f73741c7598e16bd27f3fff9f36a30b",
+      "filteredTestRows": 49997,
+      "modelSha256": {
+        "vectorizer.pkl": "69df406990335fa9ba1e2d1411ad2a56a41ecba40abded1781cafff404727118",
+        "model.pkl": "8eb8571babaf37d452b3b894281fde6997c6b2aaf8533efdfb85aa6f28bbe611"
+      },
+      "durationSeconds": 24.41,
+      "environment": {
+        "python": "3.10.6",
+        "platform": "Windows-10-10.0.26200-SP0",
+        "pandas": "2.3.3",
+        "numpy": "1.26.4",
+        "scikit-learn": "1.7.2",
+        "joblib": "1.5.3",
+        "konlpy": "0.6.0",
+        "JPype1": "1.7.1",
+        "tensorflow": "2.21.0",
+        "torch": "2.13.0",
+        "transformers": "4.46.3"
+      }
+    },
+    "lstm": {
+      "status": "succeeded",
+      "modelId": "lstm",
+      "metrics": {
+        "accuracy": 0.8082,
+        "precision": 0.8512,
+        "recall": 0.744,
+        "f1": 0.794
+      },
+      "sampleSha256": "277576170352d11980616d54858a15fb9f73741c7598e16bd27f3fff9f36a30b",
+      "filteredTestRows": 49997,
+      "modelSha256": {
+        "model.h5": "aa87bac234a46daebda568a79000cb656dc781df39cbe28152200935a2f9f60b",
+        "tokenizer.json": "ec62e121240daf19b5b206db0e91c4f108b740a7dd041173d5bfaa46c79da451"
+      },
+      "durationSeconds": 23.75,
+      "environment": {
+        "python": "3.10.6",
+        "platform": "Windows-10-10.0.26200-SP0",
+        "pandas": "2.3.3",
+        "numpy": "1.26.4",
+        "scikit-learn": "1.7.2",
+        "joblib": "1.5.3",
+        "konlpy": "0.6.0",
+        "JPype1": "1.7.1",
+        "tensorflow": "2.21.0",
+        "torch": "2.13.0",
+        "transformers": "4.46.3"
+      }
+    },
+    "klue_bert": {
+      "status": "succeeded",
+      "modelId": "klue_bert",
+      "metrics": {
+        "accuracy": 0.878,
+        "precision": 0.8539,
+        "recall": 0.9102,
+        "f1": 0.8811
+      },
+      "sampleSha256": "277576170352d11980616d54858a15fb9f73741c7598e16bd27f3fff9f36a30b",
+      "filteredTestRows": 49997,
+      "modelSha256": {
+        "model.safetensors": "8a2e7480a194c64ffe0b22a35a3a0ecd9e4cc5cd5e68cb73436b399956f28423",
+        "tokenizer.json": "c31fcbfa68647c3674ebde12c390b637f85c855f43b292264b4ac9b3ef8c03f3",
+        "config.json": "603b8940a2e8550d2b250a8bcf64e55fd4a221868579a88e83b826a2b2f88c0b"
+      },
+      "durationSeconds": 203.03,
+      "environment": {
+        "python": "3.10.6",
+        "platform": "Windows-10-10.0.26200-SP0",
+        "pandas": "2.3.3",
+        "numpy": "1.26.4",
+        "scikit-learn": "1.7.2",
+        "joblib": "1.5.3",
+        "konlpy": "0.6.0",
+        "JPype1": "1.7.1",
+        "tensorflow": "2.21.0",
+        "torch": "2.13.0",
+        "transformers": "4.46.3"
+      }
+    }
+  }
+}

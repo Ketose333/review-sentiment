@@ -272,7 +272,8 @@ code(
 # ===== 6. 모델 3 — KLUE-BERT =====
 md("## 6. 모델 3 — KLUE-BERT 파인튜닝\n\n"
    "사전학습 트랜스포머 `klue/bert-base`를 NSMC로 파인튜닝한다. \n"
-   "CPU 제약상 서브셋(train 18,000 / test 5,000, 2 epoch)으로 학습한다 — GPU 풀데이터 시 Acc 0.90+ 기대.\n\n"
+   "CPU 제약상 서브셋(train 18,000 / test 5,000, 2 epoch)으로 학습한다. 전체 테스트 분할 평가는 별도로 필요하다.\n\n"
+   "베이스 모델 출처: https://huggingface.co/klue/bert-base · Park et al. (2021): https://arxiv.org/abs/2105.09680\n\n"
    "> ⚠️ CPU 파인튜닝은 가장 오래 걸린다(수십 분~). 시간이 없으면 이 절을 건너뛰고 "
    "저장된 `models/klue_bert/metrics.json`의 수치를 비교표에 사용해도 된다.")
 code(
@@ -339,16 +340,15 @@ code(
 
 # ===== 9. 결론 =====
 md("## 9. 결론\n\n"
-   "- 세 모델 모두 인수조건(Accuracy ≥ 0.80)을 충족했다.\n"
-   "- **KLUE-BERT가 F1 최고**(0.8733). CPU 서브셋 학습임에도 사전학습 표현력으로 가장 우수했고, "
-   "GPU 풀데이터 시 0.90+가 기대된다.\n"
-   "- LSTM·TF-IDF는 전체 데이터로도 0.84 안팎으로, 가볍고 추론이 빠른 실용적 베이스라인이다.\n"
-   "- LIME으로 모델이 감성 단어에 근거해 판단함을 확인했다(설명 가능성).\n"
+   "- 저장된 지표는 TF-IDF Accuracy 0.837, LSTM 0.824, KLUE-BERT 0.878이다.\n"
+   "- KLUE-BERT만 테스트 분할의 5천 건 표본으로 평가해 직접적인 모델 순위는 아직 확정할 수 없다.\n"
+   "- LSTM의 기존 Accuracy 목표 0.85와 KLUE-BERT 목표 0.88은 저장된 결과에서 미달했다.\n"
+   "- LIME은 개별 예측의 단어별 기여도를 표시하며 일반적 모델 근거의 증명으로 해석하지 않는다.\n"
    "- 결과물은 Streamlit 앱으로 배포해 누구나 리뷰를 입력하고 예측·근거를 확인할 수 있다.")
 
 nb['cells'] = cells
 nb['metadata']['kernelspec'] = {'display_name': 'Python 3', 'language': 'python', 'name': 'python3'}
-nb['metadata']['language_info'] = {'name': 'python', 'version': '3.10'}
+nb['metadata']['language_info'] = {'name': 'python', 'version': '3.11'}
 
 import os
 os.makedirs('submission', exist_ok=True)
