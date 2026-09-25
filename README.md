@@ -38,9 +38,8 @@ NSMC(Naver Sentiment Movie Corpus) 기반 한국어 영화 리뷰 감성 분석 
 11. [로컬 웹/API 실행](#로컬-웹api-실행)
 12. [이전 Streamlit 앱 실행](#이전-streamlit-앱-실행-legacy)
 13. [이전 Streamlit 배포 기록](#이전-streamlit-배포-기록)
-14. [이전 Streamlit 상시 유지 기록](#이전-streamlit-상시-유지-기록)
-15. [라이선스](#라이선스)
-16. [연락처](#연락처)
+14. [라이선스](#라이선스)
+15. [연락처](#연락처)
 
 <p align="right">(<a href="#readme-top">맨 위로</a>)</p>
 
@@ -220,19 +219,13 @@ streamlit run app.py
 
 ## 이전 Streamlit 배포 기록
 
-아래 내용은 초기 Streamlit 구현을 재현하기 위한 기록입니다. 현재 공개 서비스 링크는 상단의 Vercel 웹이며, 이 Streamlit 주소는 공식 진입점으로 제공하지 않습니다.
+아래 내용은 초기 Streamlit 구현을 재현하기 위한 기록입니다. 기존 Streamlit Cloud 배포는 2026-09-25 삭제했고, 이를 깨우던 6시간 주기 keep-alive workflow도 함께 제거했습니다. 현재 공개 서비스 링크는 상단의 Vercel 웹입니다.
 
 1. 레포를 GitHub에 push (모델 가중치는 배포 시 Hugging Face Hub 자산 저장소에서 받음)
 2. [share.streamlit.io](https://share.streamlit.io)에서 레포 연결, entry point = `app.py`
 3. `packages.txt`로 JDK 자동 설치됨
 4. **⚠️ Python 버전 고정 필수**: Streamlit Cloud는 기본적으로 최신 Python(예: 3.14)을 띄우는데, `tensorflow`는 해당 버전용 wheel이 아직 없어 `pip install`이 통째로 실패한다(`No matching distribution found for tensorflow`). 앱 대시보드 **⋮ → Settings → Python version**에서 **3.11**을 선택할 것. (`runtime.txt`도 3.11로 두지만, 확실한 적용은 대시보드 설정이다.)
 5. 초기 Streamlit 구현을 로컬에서 재현하려면 `streamlit run app.py`를 실행한다.
-
-<p align="right">(<a href="#readme-top">맨 위로</a>)</p>
-
-## 이전 Streamlit 상시 유지 기록
-
-이 워크플로는 이전 Streamlit 데모를 유지하던 운영 기록입니다. `.github/workflows/keep_alive.yml`이 6시간마다 앱을 방문해 슬립 복귀를 확인합니다. 현재 서비스의 정식 주소나 가용성 모니터로 해석하지 마세요.
 
 <p align="right">(<a href="#readme-top">맨 위로</a>)</p>
 
