@@ -13,8 +13,6 @@ export const PRESET_REVIEWS: { label: string; text: string }[] = [
   { label: "짧은 입력 예시", text: "ㅎㅎ" },
 ];
 
-export const STREAMLIT_URL = "https://nsmc-sentiment.streamlit.app";
-
 export const NAV_ITEMS = [
   { href: "/", label: "리뷰 분석" },
   { href: "/dataset", label: "데이터 탐색" },

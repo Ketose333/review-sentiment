@@ -73,23 +73,6 @@ a { color: inherit; }
 }
 .nav-link:hover { color: var(--text); background: rgb(255 255 255 / .05); }
 .nav-link.is-current { color: var(--cyan); border-color: rgb(145 237 252 / .35); background: rgb(145 237 252 / .08); }
-.streamlit-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  flex: none;
-  min-height: 38px;
-  padding: 0 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--control-radius);
-  color: var(--text);
-  text-decoration: none;
-  white-space: nowrap;
-  font-size: 14px;
-  font-weight: 600;
-}
-.streamlit-link:hover { border-color: var(--indigo); color: var(--indigo); }
-.streamlit-link svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
 .page-intro { padding: 39px 0 26px; border-bottom: 1px solid var(--line); }
 .page-intro h1 { margin: 0; font-size: clamp(29px, 3vw, 38px); line-height: 1.22; letter-spacing: -.055em; font-weight: 850; }
@@ -216,6 +199,24 @@ a { color: inherit; }
 .models-alert { margin: 0 0 18px; padding: 14px; border: 1px solid var(--line-strong); border-radius: var(--control-radius); background: var(--surface-soft); font-size: 13px; }
 .models-alert p { margin: 5px 0; }
 .models-alert button { padding: 6px 12px; border: 1px solid var(--indigo); border-radius: var(--control-radius); background: transparent; color: var(--indigo); font-size: 13px; font-weight: 700; }
+.quota-dialog {
+  width: min(100% - 32px, 480px);
+  max-width: 480px;
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: 16px;
+  background: var(--surface-strong);
+  color: var(--text);
+  box-shadow: 0 24px 80px rgb(0 0 0 / .55);
+}
+.quota-dialog::backdrop { background: rgb(3 7 18 / .76); backdrop-filter: blur(4px); }
+.quota-dialog-content { padding: 26px; }
+.quota-dialog-label { color: var(--cyan); font-size: 12px; font-weight: 800; letter-spacing: .04em; }
+.quota-dialog h2 { margin: 8px 0 10px; font-size: 21px; line-height: 1.35; }
+.quota-dialog p { margin: 0; color: var(--muted); font-size: 14px; }
+.quota-dialog .notice-id { margin-top: 8px; font-size: 12px; }
+.quota-dialog-close { width: 100%; min-height: 44px; margin-top: 22px; border: 1px solid color-mix(in srgb, var(--indigo) 72%, white 10%); border-radius: var(--control-radius); background: var(--indigo); color: #1000a9; font-weight: 800; }
 
 .performance { margin: 0 0 54px; padding: 28px 0 0; border-top: 1px solid var(--line); }
 .performance-heading { display: flex; align-items: baseline; gap: 18px; }
@@ -269,7 +270,6 @@ a { color: inherit; }
   .page-container { width: min(100% - 48px, 860px); }
   .header-inner { flex-wrap: wrap; gap: 6px 18px; padding-block: 13px; }
   .site-nav { order: 3; width: 100%; margin: 0; }
-  .streamlit-link { margin-left: auto; }
   .workspace-grid { grid-template-columns: minmax(0, 1fr) minmax(280px, .85fr); gap: 16px; }
   .form-section, .result-section { padding: 20px; }
   .model-options { grid-template-columns: 1fr; }
@@ -308,8 +308,6 @@ a { color: inherit; }
   .brand { grid-column: 1; grid-row: 1; font-size: 17px; line-height: 1.25; }
   .site-nav { grid-column: 1 / -1; grid-row: 2; order: initial; width: 100%; gap: 3px; overflow-x: auto; }
   .nav-link { flex: none; padding-inline: 9px; font-size: 13px; }
-  .streamlit-link { grid-column: 2; grid-row: 1; margin-left: 0; padding-inline: 8px; font-size: 12px; }
-  .streamlit-link svg { width: 12px; height: 12px; }
   .page-intro h1 { font-size: 28px; }
   .form-section, .result-section { padding: 18px; }
   .result-score { gap: 10px; }
@@ -323,9 +321,6 @@ a { color: inherit; }
   .stat-tile { min-width: 0; padding: 14px; }
   .about-section .stat-tile:last-child { grid-column: 1 / -1; }
   .footer-inner { font-size: 12px; }
-}
-@media (max-width: 355px) {
-  .streamlit-link { grid-column: 1 / -1; grid-row: 3; justify-content: center; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }

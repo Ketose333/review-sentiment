@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { NAV_ITEMS, STREAMLIT_URL } from "@/constants";
+import { NAV_ITEMS } from "@/constants";
 
 export function SiteHeader() {
   const pathname = usePathname();
@@ -17,9 +17,6 @@ export function SiteHeader() {
           aria-current={pathname === item.href ? "page" : undefined}
         >{item.label}</Link>)}
       </nav>
-      <a className="streamlit-link" href={STREAMLIT_URL} target="_blank" rel="noopener noreferrer">
-        Streamlit 데모 바로가기 <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 13 13 3M5 3h8v8" /></svg>
-      </a>
     </div>
   </header>;
 }

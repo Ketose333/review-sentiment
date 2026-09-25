@@ -5,4 +5,5 @@ import { defineConfig } from "vitest/config";
 // runtime imports (not just type imports) now cross that boundary.
 export default defineConfig({
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
+  test: { include: ["tests/**/*.{test,spec}.{ts,tsx}"] },
 });

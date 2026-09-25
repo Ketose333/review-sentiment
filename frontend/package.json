@@ -2,12 +2,22 @@
   "name": "review-sentiment-web",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "npm@10.9.2",
+  "engines": {
+    "node": ">=22.16.0 <23",
+    "npm": ">=10 <11"
+  },
   "scripts": {
+    "check:toolchain": "node scripts/check-toolchain.mjs",
+    "preinstall": "npm run check:toolchain",
+    "predev": "npm run check:toolchain && npm run check:env",
     "dev": "next dev",
-    "build": "next build",
+    "check:env": "node scripts/check-env.mjs",
+    "build": "npm run check:toolchain && npm run check:env && next build",
     "start": "next start",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "deploy": "npm run check:toolchain && npm run check:env && node scripts/deploy.mjs"
   },
   "dependencies": {
     "next": "16.3.6",
@@ -23,6 +33,7 @@
     "eslint-config-next": "16.3.6",
     "tailwindcss": "^4.1.0",
     "typescript": "^5.0.0",
-    "vitest": "4.1.11"
+    "vitest": "4.1.11",
+    "vercel": "60.0.1"
   }
 }

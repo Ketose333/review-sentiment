@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { MAX_REVIEW_LENGTH, PRESET_REVIEWS } from "@/constants";
 import { ApiError, createAnalysis, fetchModels } from "@/lib/api/client";
 import { contribution, explanationRequested } from "@/lib/explanation";
@@ -10,19 +10,40 @@ import type { AnalysisResult, ModelInfo } from "@/types";
 
 const MAX_LENGTH = MAX_REVIEW_LENGTH;
 
-type Notice = { title: string; body: string; requestId: string | null; analysisId: string | null };
+type Notice = { title: string; body: string; requestId: string | null; analysisId: string | null; quotaPossible?: boolean };
 
-function errorNotice(error: unknown): Notice {
+export function errorNotice(error: unknown): Notice {
   if (!(error instanceof ApiError)) {
     return { title: "연결할 수 없습니다", body: "잠시 후 다시 시도해 주세요.", requestId: null, analysisId: null };
   }
+  const possibleQuotaNotice = {
+    title: "현재 분석할 수 없습니다",
+    body: "서버 한도 소진 또는 일시적인 서비스 장애일 수 있습니다. 현재 앱은 Modal 잔액을 실시간 조회하지 못합니다. 잠시 후 다시 시도해 주세요. 문제가 계속되면 월간 사용량 초기화 후 복구될 수 있습니다.",
+    quotaPossible: true,
+  };
   const messages: Record<number, { title: string; body: string }> = {
     413: { title: "요청 크기가 너무 큽니다", body: "입력 내용을 줄인 뒤 다시 시도해 주세요." },
     429: { title: "요청이 많습니다", body: "잠시 기다린 뒤 다시 시도해 주세요." },
-    503: { title: "현재 분석할 수 없습니다", body: "모델 또는 서비스가 준비되지 않았습니다. 잠시 후 다시 시도해 주세요." },
     500: { title: "분석에 실패했습니다", body: "잠시 후 다시 시도해 주세요." },
   };
-  let message = messages[error.status];
+  let message: Pick<Notice, "title" | "body" | "quotaPossible"> | undefined = messages[error.status];
+  if (error.status === 0 && error.code === "NETWORK_ERROR") {
+    message = { ...possibleQuotaNotice, title: "서비스에 연결할 수 없습니다" };
+  }
+  if (error.status === 502 || error.status === 504) {
+    message = possibleQuotaNotice;
+  }
+  if (error.status === 503) {
+    if (error.code === "SERVICE_BUSY") {
+      message = { title: "요청이 많습니다", body: "잠시 기다린 뒤 다시 시도해 주세요." };
+    } else if (error.code === "REGISTRY_UNAVAILABLE") {
+      message = { title: "서비스에 연결할 수 없습니다", body: "모델 목록 또는 분석 결과 저장소에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요." };
+    } else if (error.code === "MODEL_UNAVAILABLE") {
+      message = { ...possibleQuotaNotice, title: "모델을 사용할 수 없습니다", body: `모델 서비스가 준비되지 않았습니다. ${possibleQuotaNotice.body}` };
+    } else {
+      message = possibleQuotaNotice;
+    }
+  }
   if (error.status === 422) {
     message = error.code === "EXPLANATION_UNSUPPORTED"
       ? { title: "설명을 제공하지 않습니다", body: "이 모델의 설명 기능을 사용할 수 없습니다. 모델 목록을 다시 확인해 주세요." }
@@ -47,6 +68,25 @@ function evaluationScope(model: ModelInfo): string {
 
 function InfoIcon() {
   return <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="8.5" fill="currentColor" /><path d="M10 8.4v5.1M10 6.3h.01" stroke="white" strokeWidth="1.8" strokeLinecap="round" /></svg>;
+}
+
+function QuotaNoticeDialog({ notice, onDismiss }: { notice: Notice; onDismiss: () => void }) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (dialog && !dialog.open) dialog.showModal();
+    return () => { if (dialog?.open) dialog.close(); };
+  }, []);
+  return <dialog ref={dialogRef} className="quota-dialog" aria-labelledby="quota-dialog-title" onClose={onDismiss}>
+    <div className="quota-dialog-content">
+      <span className="quota-dialog-label">서비스 이용 안내</span>
+      <h2 id="quota-dialog-title">{notice.title}</h2>
+      <p>{notice.body}</p>
+      {notice.requestId ? <p className="notice-id">요청 ID: {notice.requestId}</p> : null}
+      {notice.analysisId ? <p className="notice-id">분석 ID: {notice.analysisId}</p> : null}
+      <button type="button" className="quota-dialog-close" onClick={() => dialogRef.current?.close()}>확인</button>
+    </div>
+  </dialog>;
 }
 
 export function ModelPicker({ models, selected, onSelect, disabled }: { models: ModelInfo[]; selected: string; onSelect: (value: string) => void; disabled: boolean }) {
@@ -163,6 +203,7 @@ export function AnalysisWorkspace() {
   const [resultRequestId, setResultRequestId] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [modelsNotice, setModelsNotice] = useState<Notice | null>(null);
+  const [quotaDialogDismissed, setQuotaDialogDismissed] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [askedExplanation, setAskedExplanation] = useState(false);
@@ -189,6 +230,7 @@ export function AnalysisWorkspace() {
       if (!active) return;
       setModels([]);
       setSelected("");
+      setQuotaDialogDismissed(false);
       setModelsNotice(errorNotice(error));
     }).finally(() => { if (active) setLoadingModels(false); });
     return () => { active = false; };
@@ -200,6 +242,7 @@ export function AnalysisWorkspace() {
     setHasSubmitted(true);
     setResult(null);
     setNotice(null);
+    setQuotaDialogDismissed(false);
     setResultRequestId(null);
     if (!selectedModel) {
       setNotice({ title: "모델을 선택해 주세요", body: "현재 사용할 수 있는 모델이 없습니다.", requestId: null, analysisId: null });
@@ -223,7 +266,10 @@ export function AnalysisWorkspace() {
     }
   }
 
+  const quotaNotice = notice?.quotaPossible ? notice : modelsNotice;
+
   return <>
+    {quotaNotice && !quotaDialogDismissed ? <QuotaNoticeDialog notice={quotaNotice} onDismiss={() => setQuotaDialogDismissed(true)} /> : null}
     <div className="page-intro"><h1>영화 리뷰 감성 분석</h1></div>
       <div className="workspace-grid"><section className="form-section" aria-labelledby="form-heading"><h2 id="form-heading">리뷰 분석하기</h2>
         {modelsNotice ? <div className="models-alert" role="alert"><strong>{modelsNotice.title}</strong><p>{modelsNotice.body}</p>{modelsNotice.requestId ? <p>요청 ID: {modelsNotice.requestId}</p> : null}<button type="button" onClick={() => { setLoadingModels(true); setReloadKey((value) => value + 1); }}>다시 불러오기</button></div> : null}
