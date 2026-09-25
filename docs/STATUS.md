@@ -10,7 +10,7 @@
 | --- | --- |
 | 모델 아티팩트 관리 | Hugging Face Hub 자산 저장소에서 런타임 로드 |
 | Streamlit 초기 배포 | 과거 데모가 Public으로 남아 있음. 현재 정식 진입 주소는 [Next.js 웹](https://review-sentiment-web.vercel.app)이며 README·GitHub About에서 이전 데모 링크를 제거함 |
-| Streamlit keep-alive (legacy) | 이전 데모 주소를 6시간마다 방문하는 기존 workflow. 현재 웹/API 가용성 모니터로 간주하지 않음 (PR #6, #8) |
+| Streamlit keep-alive (legacy) | 이전 데모 주소를 6시간마다 방문하는 기존 workflow. 현재 웹/API 가용성 모니터가 아님. 사용자가 리뷰 감성 분석 Streamlit 배포를 직접 삭제한 뒤 이 workflow와 전용 스크립트·자동 검증을 중지할 것 (PR #6, #8) |
 | Streamlit 초기 앱 재현 | 과거 배포 설정은 Python 3.11과 `packages.txt` JDK에 의존. 현재 Next.js/FastAPI 공개 서비스를 재현하는 설정이 아님 |
 | Java/JVM (Okt) | 로컬 JDK 17. `packages.txt` 자동 설치는 과거 Streamlit 배포 전용 |
 | 확장 스택 배포 형태 | ✅ 공개 배포됨 — [Next.js 웹](https://review-sentiment-web.vercel.app), [FastAPI 상태](https://ketose333--review-sentiment-api-api.ap-south.modal.run/healthz), Neon PostgreSQL Free. Vercel 프로젝트 `review-sentiment-web`, Vercel Hobby·Modal Starter·Neon Free 사용, PC와 무관하게 호스팅. Modal은 유휴 시 0개 컨테이너로 절전하고 첫 요청에 콜드 스타트가 있음. 웹은 정식 주소 하나만 연결하고 이전 Vercel 별칭과 API CORS 허용을 제거함. 이관 공개 기능 검증은 통과했으나 안정성·장기 비용 게이트 전이라 Streamlit은 유지. 비용·실측은 [공개 배포 기록](deployment-public.md) |
@@ -44,7 +44,7 @@
 - [x] **공개 배포 기능 검증**: 실제 웹/API 주소에서 세 모델 예측·LIME, 500/501자 경계, `/dataset`·`/about`, 브라우저 연동 확인. 공개 주소·실측은 [이관 완료 기준](migration-parity.md) 및 [공개 배포 계획](deployment-public.md) 참고
 - [x] **무료 한도 사용자 알림**: API 오류에서 한도 소진 가능성과 잔액 확인 한계를 모달로 알림. PR #16; 테스트 28건·lint·로컬/원격 빌드, 로컬 모달 표시·닫기, 공개 배포 완료
 - [ ] **이관 운영 안정성 검증**: 추가 비용 없이 반복 콜드 스타트·지연·동시 요청·최대 메모리·Neon 재개와 Modal/Vercel/Neon 사용량 한도 측정. 크레딧 소진 시 서비스 중단 위험 확인
-- [ ] **Streamlit 이관 2·3단계**: 세 모델의 배포 메모리·지연·비용 측정 → 공개 주소 기능 검증 → 안정 확인 뒤 keep-alive 이전·Streamlit 은퇴
+- [ ] **이관 운영 게이트**: 세 모델의 배포 메모리·지연·비용 측정 → 공개 주소 안정성 확인 → 이관 완료 판정. 사용자가 기존 리뷰 감성 분석 Streamlit 배포를 직접 삭제하기로 했으며, 삭제 확인 뒤 이 저장소의 keep-alive를 중지. 배포 삭제만으로 이관 완료로 표시하지 않음
 - [ ] **이관 완료 후 이력서 스택 재평가**: 실제 구현·테스트·공개 배포 증거를 기준으로 이력서의 기술 공백이 채워졌는지 확인하고, 부족한 항목만 다음 작업으로 정한다. 이관 완료 전에는 충족으로 표시하지 않음
 - [ ] LSTM 시드 고정 결과 재검증 및 Accuracy 0.85 목표 유지 여부 결정
 - [ ] KLUE-BERT 전체 데이터/GPU 재학습 필요성은 공통 평가 결과 확인 후 결정
