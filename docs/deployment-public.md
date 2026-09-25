@@ -1,14 +1,14 @@
 # 공개 배포 계획과 Streamlit 이관 (2026-09-24)
 
-목표는 새 스택(FastAPI + Next.js)이 기존 Streamlit 데모를 **대체**하는 것이다. [이관 완료 기준](migration-parity.md)은 세 모델 예측·설명과 500자 입력이다. 로컬 컨테이너에서는 세 모델의 예측·설명과 500자 경계를 확인했다. 운영 안정성 게이트는 남아 있다. 사용자가 기존 리뷰 감성 분석 Streamlit 배포를 직접 삭제할 예정이며, 배포 삭제와 이관 완료 판정은 별개다. 삭제를 확인하면 이 저장소의 전용 keep-alive를 중지한다.
+목표는 새 스택(FastAPI + Next.js)이 기존 Streamlit 데모를 **대체**하는 것이다. [이관 완료 기준](migration-parity.md)은 세 모델 예측·설명과 500자 입력이다. 로컬 컨테이너에서는 세 모델의 예측·설명과 500자 경계를 확인했다. 운영 안정성 게이트는 남아 있다. 사용자가 2026-09-25 기존 리뷰 감성 분석 Streamlit 배포를 삭제했고, 이 저장소의 전용 keep-alive도 제거했다(이슈 #17). 배포 삭제와 이관 완료 판정은 별개다.
 
 ## 기존 배포 상황 (이 계획의 전제)
 
 | 대상 | 현재 | 이 프로젝트에 주는 제약 |
 |---|---|---|
-| review-sentiment Streamlit (legacy) | 기존 Streamlit Cloud 앱은 Public으로 남아 있음. 공식 웹 진입점은 https://review-sentiment-web.vercel.app | 과거 구현 재현용. README와 GitHub About에서는 현재 데모로 노출하지 않음 |
+| review-sentiment Streamlit (legacy) | 2026-09-25 사용자가 삭제. 공식 웹 진입점은 https://review-sentiment-web.vercel.app | `app.py`는 과거 구현의 로컬 재현용으로만 남음 |
 | music-mood-recs Streamlit | Streamlit Cloud Public | 같은 무료 티어를 공유하므로 새 비용을 만들지 않는 편이 일관적이다 |
-| 슬립 대응 | 공통 Playwright keep-alive GitHub Actions(6시간 주기 방문·wake·본문 검증) | 새 API·웹도 같은 방식으로 깨울 수 있다 |
+| 슬립 대응 | music-mood-recs는 자체 Playwright keep-alive GitHub Actions를 유지. 이 저장소의 Streamlit keep-alive는 앱 삭제로 제거함 | 새 API·웹에는 자동 방문 작업을 두지 않는다 |
 | web-portfolio | Vercel(`*.vercel.app`), 커스텀 부모 도메인 이전을 계획 중 | 웹은 Vercel이 기존 계정·경험과 맞는다 |
 | 무거운 아티팩트 | Hugging Face Hub 데이터셋 저장소(`Ketose333/review-sentiment-assets`, `…music-mood-recs-assets`)에서 런타임 로드 | 이미 쓰는 계정이다. API도 같은 고정 revision을 쓴다 |
 | 컨테이너·관리형 DB | **사용 이력 없음** | 새로 도입하는 유일한 요소이므로 가장 작은 선택을 한다 |
@@ -49,12 +49,12 @@
 ### 2026-09-25 실제 공개 배포
 
 - **웹:** Vercel Hobby 프로젝트를 `review-sentiment-web`로 정리하고 `frontend/`만 직접 업로드했다. Next.js 16.3.6 프로덕션 빌드 통과. 정식 공개 주소는 https://review-sentiment-web.vercel.app 하나만 Production 도메인으로 연결했다. 기존 `frontend-kappa-navy-gtn5mqhmrx.vercel.app` 및 `frontend-ketose333.vercel.app` 별칭은 프로젝트와 배포에서 제거했다. GitHub 자동 연결은 실패했지만 직접 업로드 배포는 성공했다. 다음 배포는 CLI에서 수동 실행해야 한다.
-- **도메인·CORS 정리:** Vercel 프로젝트 이름을 `frontend`에서 `review-sentiment-web`로 변경했다. Modal Secret의 CORS 허용 목록에는 `https://review-sentiment-web.vercel.app`만 둔다. 새 도메인의 모델 목록 로딩과 CORS 응답을 확인했고, 이전 Vercel 주소는 더 이상 지원하지 않는다. 기존 Streamlit 앱과 keep-alive는 legacy 상태로 남아 있으며, 공식 진입 링크는 새 웹 주소 하나만 제공한다.
+- **도메인·CORS 정리:** Vercel 프로젝트 이름을 `frontend`에서 `review-sentiment-web`로 변경했다. Modal Secret의 CORS 허용 목록에는 `https://review-sentiment-web.vercel.app`만 둔다. 새 도메인의 모델 목록 로딩과 CORS 응답을 확인했고, 이전 Vercel 주소는 더 이상 지원하지 않는다. 당시 기존 Streamlit 앱과 keep-alive는 legacy 상태로 남아 있었으며(2026-09-25 삭제·제거), 공식 진입 링크는 새 웹 주소 하나만 제공한다.
 - **API:** Modal Starter에서 FastAPI 이미지 배포. https://ketose333--review-sentiment-api-api.ap-south.modal.run . `min_containers=0`, 유휴 60초 후 scale-to-zero, `max_containers=1`, 2 CPU·8 GiB. 컴퓨트는 PC와 무관하게 원격 실행되고 URL은 계속 공개되지만, 첫 요청에는 콜드 스타트가 있다. 화면에서 모델 목록 복귀까지 18초 이상 한 번 관측했다.
 - **DB:** Neon Free (Singapore), 0001~0008 마이그레이션 완료. API가 쓰는 pooled endpoint는 IPv6 우선 경로와 연결 시작 `options` 제한이 있어 첫 공개 조회가 실패했다. 공유 카운터 타임아웃을 PostgreSQL 트랜잭션 범위 `set_config(..., true)`로 적용하도록 수정 후 조회가 정상화되었다. Neon PgBouncer의 transaction pooling은 세션 상태를 보존하지 않으므로 타임아웃 설정은 각 카운터 트랜잭션 안에서만 한다.
 - **실제 공개 검증:** `GET /healthz`, `GET /v1/models` 통과. TF-IDF·LSTM·KLUE-BERT에서 예측과 LIME 설명 성공. 500자는 성공, 501자는 `422 INVALID_TEXT`. 브라우저에서 TF-IDF와 KLUE-BERT 분석·LIME 표시 성공. `/dataset`, `/about` 표시 확인. CORS는 최종 Vercel 프로덕션 origin으로 제한했다. LSTM 브라우저 표시 경로, 동시 부하·반복 콜드 스타트는 더 측정할 수 있다.
 - **비용:** 계정 화면상 Vercel Hobby, Neon Free, Modal Starter이며 Modal 결제 화면에 결제 수단 추가 안내가 표시된다(카드 미등록). 2026-09-25 Usage & Billing 화면 확인값은 Modal 무료 크레딧 $1.00 중 $0.10 사용·$0.91 잔여, 이번 주기 청구 $0이다. 크레딧 소진 뒤에는 유료 전환 없이 요청이 중단될 수 있다. 무료 플랜 한도 초과나 정책 변경 가능성은 계속 모니터링해야 하며, 결제 수단·유료 플랜을 추가하지 않는다.
-- **유지:** Streamlit과 기존 6시간 keep-alive를 계속 운영한다. 아래 안정성 게이트가 확인되기 전에는 Streamlit을 내리지 않는다.
+- **유지(당시 계획):** Streamlit과 기존 6시간 keep-alive를 계속 운영하기로 했다. 이후 사용자가 2026-09-25 Streamlit 배포를 삭제해 keep-alive도 제거했다. 아래 안정성 게이트는 이와 별개로 미완료다.
 
 API 컨테이너에는 `GET /healthz`를 생존 확인 경로로 지정한다. 속도 제한과 DB 접근이 없으므로 부하 중에도 거절되지 않는다. 다만 생존 확인 전용이라 DB 도달 여부는 확인하지 않는다. 준비 확인이 필요해도 `/v1/models`는 쓰지 않는다 — 공개 예산을 소모해 부하 중에 재시작을 유발한다.
 
@@ -74,7 +74,7 @@ API 컨테이너에는 `GET /healthz`를 생존 확인 경로로 지정한다. �
 | 공개 주소 | `/`, `/dataset`, `/about` HEAD 200. 브라우저에서 세 모델 목록 로딩 확인; 분석 POST·LIME은 이번 검증에서 반복하지 않음 |
 | 의존성 감사 | 원격 전체 설치 경고 29건. 로컬 `npm audit --omit=dev`에서 프로덕션 의존성 0건 |
 
-이 배포는 화면·연결 확인이다. 공개 환경의 분석·설명 실패 처리, 반복 콜드 스타트, 동시 부하, 최대 메모리와 장기 무료 한도는 아직 이관 완료 게이트에 남아 있다. 기존 Streamlit 앱과 keep-alive는 유지한다.
+이 배포는 화면·연결 확인이다. 공개 환경의 분석·설명 실패 처리, 반복 콜드 스타트, 동시 부하, 최대 메모리와 장기 무료 한도는 아직 이관 완료 게이트에 남아 있다. 기존 Streamlit 앱과 keep-alive는 이 배포 뒤 삭제·제거했으며(이슈 #17), 그 사실이 위 게이트 통과를 뜻하지는 않는다.
 
 ### 로컬 실측을 반영한 공개 시험 사양
 
@@ -113,8 +113,8 @@ Streamlit의 네 탭 중 분석 외 화면을 웹으로 옮겼다. 새 추론 �
 
 LSTM·KLUE-BERT 예측과 세 모델의 LIME 설명, 500자 입력을 공개 환경에서 검증했다. 공개 API의 `durationMs`(추론 시간, LIME 제외)는 짧은 입력 1회에서 TF-IDF 2.586초·LSTM 12.307초·KLUE-BERT 11.009초였다. 같은 요청의 클라이언트 측 전체 경과 시간은 각각 약 8.9초·15.1초·13.6초였다. 첫 호출·직전 모델 호출·콜드 스타트의 영향을 받는 단일 관측이다. 로컬 컨테이너 사용량 3.089GiB·이미지 1,859,760,902바이트다. 반복 지연·동시 부하와 최대 메모리는 추가 측정해야 한다.
 
-### 3단계 — 운영 게이트와 기존 배포 정리
+### 3단계 — 운영 게이트와 기존 배포 정리 (게이트 미완료)
 
-세 모델의 기능 동등성과 새 주소의 안정성을 확인해 이관 완료 여부를 기록한다. 기존 리뷰 감성 분석 Streamlit 배포는 사용자가 직접 삭제할 예정이며, 삭제 확인 뒤 이 저장소의 전용 keep-alive를 중지한다. 새 주소를 깨우는 자동 방문 작업은 계획하지 않는다.
+세 모델의 기능 동등성과 새 주소의 안정성을 확인해 이관 완료 여부를 기록한다. 기존 리뷰 감성 분석 Streamlit 배포는 사용자가 2026-09-25 삭제했다. 같은 날 공개 주소가 존재하지 않는 앱과 동일한 인증 리다이렉트로 응답함을 확인하고 이 저장소의 전용 keep-alive workflow·스크립트·자동 검증을 제거했다(이슈 #17). 새 주소를 깨우는 자동 방문 작업은 계획하지 않는다. 기존 배포 정리는 끝났지만 새 웹/API의 장기 안정성·무료 운영 검증은 남아 있다.
 
 Windows 로컬 측정에서 KLUE-BERT LIME은 30샘플 약 62초였으나, Linux 컨테이너 로컬 짧은 입력은 7.78초, 공개 API 짧은 입력은 11.009초였다([측정 기록](lime-measurement.md)). 입력 길이·CPU 할당·동시 부하에 따른 편차와 공개 프록시 기한, 강제 설명 실패 동작을 추가 검증해야 한다. 장기 무료 운영·안정성을 확인하기 전에는 이관 완료로 표시하지 않는다.

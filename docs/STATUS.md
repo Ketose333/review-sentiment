@@ -9,11 +9,10 @@
 | 항목 | 상태 |
 | --- | --- |
 | 모델 아티팩트 관리 | Hugging Face Hub 자산 저장소에서 런타임 로드 |
-| Streamlit 초기 배포 | 과거 데모가 Public으로 남아 있음. 현재 정식 진입 주소는 [Next.js 웹](https://review-sentiment-web.vercel.app)이며 README·GitHub About에서 이전 데모 링크를 제거함 |
-| Streamlit keep-alive (legacy) | 이전 데모 주소를 6시간마다 방문하는 기존 workflow. 현재 웹/API 가용성 모니터가 아님. 사용자가 리뷰 감성 분석 Streamlit 배포를 직접 삭제한 뒤 이 workflow와 전용 스크립트·자동 검증을 중지할 것 (PR #6, #8) |
+| Streamlit 초기 배포 | 2026-09-25 사용자가 삭제. 같은 날 공개 주소가 존재하지 않는 앱과 동일한 인증 리다이렉트로 응답함을 확인. 이를 깨우던 keep-alive workflow·전용 스크립트·자동 검증도 제거함 (이슈 #17). 현재 정식 진입 주소는 [Next.js 웹](https://review-sentiment-web.vercel.app) |
 | Streamlit 초기 앱 재현 | 과거 배포 설정은 Python 3.11과 `packages.txt` JDK에 의존. 현재 Next.js/FastAPI 공개 서비스를 재현하는 설정이 아님 |
 | Java/JVM (Okt) | 로컬 JDK 17. `packages.txt` 자동 설치는 과거 Streamlit 배포 전용 |
-| 확장 스택 배포 형태 | ✅ 공개 배포됨 — [Next.js 웹](https://review-sentiment-web.vercel.app), [FastAPI 상태](https://ketose333--review-sentiment-api-api.ap-south.modal.run/healthz), Neon PostgreSQL Free. Vercel 프로젝트 `review-sentiment-web`, Vercel Hobby·Modal Starter·Neon Free 사용, PC와 무관하게 호스팅. Modal은 유휴 시 0개 컨테이너로 절전하고 첫 요청에 콜드 스타트가 있음. 웹은 정식 주소 하나만 연결하고 이전 Vercel 별칭과 API CORS 허용을 제거함. 이관 공개 기능 검증은 통과했으나 안정성·장기 비용 게이트 전이라 Streamlit은 유지. 비용·실측은 [공개 배포 기록](deployment-public.md) |
+| 확장 스택 배포 형태 | ✅ 공개 배포됨 — [Next.js 웹](https://review-sentiment-web.vercel.app), [FastAPI 상태](https://ketose333--review-sentiment-api-api.ap-south.modal.run/healthz), Neon PostgreSQL Free. Vercel 프로젝트 `review-sentiment-web`, Vercel Hobby·Modal Starter·Neon Free 사용, PC와 무관하게 호스팅. Modal은 유휴 시 0개 컨테이너로 절전하고 첫 요청에 콜드 스타트가 있음. 웹은 정식 주소 하나만 연결하고 이전 Vercel 별칭과 API CORS 허용을 제거함. 이관 공개 기능 검증은 통과했으나 안정성·장기 비용 게이트는 미완료. 기존 Streamlit 배포 삭제는 이 게이트 통과를 뜻하지 않음. 비용·실측은 [공개 배포 기록](deployment-public.md) |
 | 프론트 재현 배포 | PR #16 머지 후 Vercel 기존 프로젝트에 배포 `dpl_HSP7QbCZesudNh6MCPQZLkWkJLXG` 완료. Node 22.x, npm 10, `npm ci`, Production `NEXT_PUBLIC_API_URL`, 고정 Vercel CLI와 대상 확인 절차를 적용. 공개 세 화면 200 및 브라우저 모델 목록 확인. 세 모델 분석·LIME과 장기 무료 한도는 이번 배포에서 재측정하지 않음 |
 | 확장 스택 비용 한도 | 결제 수단 없음. Modal 대시보드(2026-09-25) 잔여 무료 크레딧 $0.91/$1.00, 사용 $0.10, 청구액 $0으로 표시됨. 크레딧 소진 뒤 자동 유료 전환 없이 요청이 중단될 수 있음. Vercel Hobby와 Neon Free 사용량 한도도 적용됨. 유료 전환·결제 수단 추가 금지 |
 | 확장 스택 속도 제한 | PostgreSQL 공통 고정 창 카운터(`rate_limit_counters`). 전역 예산은 허용된 요청만 청구(한 IP가 전체를 막지 못함), 원문 주소 미저장(소금값 HMAC 64자 + CHECK 제약), 전용 연결 풀과 트랜잭션 범위 서버 측 타임아웃, 카운터 장애 시 fail closed |
@@ -25,7 +24,6 @@
 | Windows에서 `pytest`·앱 첫 Okt 로드 시 faulthandler `access violation` 출력 | JVM 시작 시 JPype가 처리하는 시그널을 pytest faulthandler가 가로채 찍는 것. 테스트·앱·배포 동작에는 영향 없음 | Windows+JPype 특유의 무해한 현상, 무시 |
 | `LimeTextExplainer`가 `random_state` 미고정 | 같은 모델·같은 텍스트라도 단어별 기여도 수치가 실행마다 소폭 다름(부호·순위는 안정적) | 버그 아님, LIME 고유 특성. `random_state` 고정은 개선 항목으로 남김 |
 | (해결됨) self-contained 통합 직후 배포가 JVM SIGSEGV로 Aborted | `tensorflow`/`torch`/`transformers`를 모듈 최상단에서 즉시 import하면 Okt가 띄운 JVM과 PyTorch 네이티브 라이브러리가 같은 프로세스에 동시 적재되며 충돌 | 모델별 무거운 프레임워크 import는 각 로더 함수 안에서 지연 import로 유지 |
-| GitHub scheduled workflow 보장 한계 | 예약 실행은 지연·누락될 수 있고 공개 저장소가 60일간 비활성 상태면 schedule이 중지될 수 있음 | `auto-review.yml`과 실패 알림을 확인하고 필요 시 수동 실행 |
 | NSMC 데이터 재배포 조건 | 원본 저장소에 라이선스 본문이 없고 Hugging Face 복제본 메타데이터와 기존 문서 표기가 달랐음 | CC0 단정을 제거함. 원제공자의 조건 확인 전 원문 데이터 재배포 금지 (`docs/model-audit.md`) |
 
 ## 다음 작업
@@ -44,7 +42,8 @@
 - [x] **공개 배포 기능 검증**: 실제 웹/API 주소에서 세 모델 예측·LIME, 500/501자 경계, `/dataset`·`/about`, 브라우저 연동 확인. 공개 주소·실측은 [이관 완료 기준](migration-parity.md) 및 [공개 배포 계획](deployment-public.md) 참고
 - [x] **무료 한도 사용자 알림**: API 오류에서 한도 소진 가능성과 잔액 확인 한계를 모달로 알림. PR #16; 테스트 28건·lint·로컬/원격 빌드, 로컬 모달 표시·닫기, 공개 배포 완료
 - [ ] **이관 운영 안정성 검증**: 추가 비용 없이 반복 콜드 스타트·지연·동시 요청·최대 메모리·Neon 재개와 Modal/Vercel/Neon 사용량 한도 측정. 크레딧 소진 시 서비스 중단 위험 확인
-- [ ] **이관 운영 게이트**: 세 모델의 배포 메모리·지연·비용 측정 → 공개 주소 안정성 확인 → 이관 완료 판정. 사용자가 기존 리뷰 감성 분석 Streamlit 배포를 직접 삭제하기로 했으며, 삭제 확인 뒤 이 저장소의 keep-alive를 중지. 배포 삭제만으로 이관 완료로 표시하지 않음
+- [x] **기존 Streamlit 배포 종료**: 사용자가 2026-09-25 삭제, 공개 주소 응답으로 확인. 이 저장소의 keep-alive workflow·스크립트·자동 검증 제거 (이슈 #17)
+- [ ] **이관 운영 게이트**: 세 모델의 배포 메모리·지연·비용 측정 → 공개 주소 안정성 확인 → 이관 완료 판정. Streamlit 배포 삭제는 이 게이트 통과가 아니며, 새 웹/API의 장기 안정성·무료 운영 검증은 미완료
 - [ ] **이관 완료 후 이력서 스택 재평가**: 실제 구현·테스트·공개 배포 증거를 기준으로 이력서의 기술 공백이 채워졌는지 확인하고, 부족한 항목만 다음 작업으로 정한다. 이관 완료 전에는 충족으로 표시하지 않음
 - [ ] LSTM 시드 고정 결과 재검증 및 Accuracy 0.85 목표 유지 여부 결정
 - [ ] KLUE-BERT 전체 데이터/GPU 재학습 필요성은 공통 평가 결과 확인 후 결정
