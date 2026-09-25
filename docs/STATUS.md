@@ -14,7 +14,7 @@
 | Streamlit Python 버전 | **3.11 고정 필수** — 대시보드 ⋮ → Settings → Python version. 미고정 시 Python 3.14가 떠 tensorflow wheel 부재로 배포 크래시. `runtime.txt`(3.11)도 두지만 대시보드 설정이 확실함 |
 | Java/JVM (Okt) | 로컬 JDK 17, Streamlit Cloud는 `packages.txt`(`default-jdk`)로 자동 설치 |
 | 확장 스택 배포 형태 | ✅ 공개 배포됨 — [Next.js 웹](https://review-sentiment-web.vercel.app), [FastAPI 상태](https://ketose333--review-sentiment-api-api.ap-south.modal.run/healthz), Neon PostgreSQL Free. Vercel 프로젝트 `review-sentiment-web`, Vercel Hobby·Modal Starter·Neon Free 사용, PC와 무관하게 호스팅. Modal은 유휴 시 0개 컨테이너로 절전하고 첫 요청에 콜드 스타트가 있음. 웹은 정식 주소 하나만 연결하고 이전 Vercel 별칭과 API CORS 허용을 제거함. 이관 공개 기능 검증은 통과했으나 안정성·장기 비용 게이트 전이라 Streamlit은 유지. 비용·실측은 [공개 배포 기록](deployment-public.md) |
-| 확장 스택 비용 한도 | 결제 수단 없음. Modal 대시보드 잔여 무료 크레딧 $0.97/$1.00, 사용 $0.03로 표시됨. 크레딧 소진 뒤 자동 유료 전환 없이 요청이 중단될 수 있음. Vercel Hobby와 Neon Free 사용량 한도도 적용됨. 유료 전환·결제 수단 추가 금지 |
+| 확장 스택 비용 한도 | 결제 수단 없음. Modal 대시보드(2026-09-25) 잔여 무료 크레딧 $0.93/$1.00, 사용 $0.07, 청구액 $0으로 표시됨. 크레딧 소진 뒤 자동 유료 전환 없이 요청이 중단될 수 있음. Vercel Hobby와 Neon Free 사용량 한도도 적용됨. 유료 전환·결제 수단 추가 금지 |
 | 확장 스택 속도 제한 | PostgreSQL 공통 고정 창 카운터(`rate_limit_counters`). 전역 예산은 허용된 요청만 청구(한 IP가 전체를 막지 못함), 원문 주소 미저장(소금값 HMAC 64자 + CHECK 제약), 전용 연결 풀과 트랜잭션 범위 서버 측 타임아웃, 카운터 장애 시 fail closed |
 
 ## 알려진 이슈

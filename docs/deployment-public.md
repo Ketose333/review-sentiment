@@ -53,7 +53,7 @@
 - **API:** Modal Starter에서 FastAPI 이미지 배포. https://ketose333--review-sentiment-api-api.ap-south.modal.run . `min_containers=0`, 유휴 60초 후 scale-to-zero, `max_containers=1`, 2 CPU·8 GiB. 컴퓨트는 PC와 무관하게 원격 실행되고 URL은 계속 공개되지만, 첫 요청에는 콜드 스타트가 있다. 화면에서 모델 목록 복귀까지 18초 이상 한 번 관측했다.
 - **DB:** Neon Free (Singapore), 0001~0008 마이그레이션 완료. API가 쓰는 pooled endpoint는 IPv6 우선 경로와 연결 시작 `options` 제한이 있어 첫 공개 조회가 실패했다. 공유 카운터 타임아웃을 PostgreSQL 트랜잭션 범위 `set_config(..., true)`로 적용하도록 수정 후 조회가 정상화되었다. Neon PgBouncer의 transaction pooling은 세션 상태를 보존하지 않으므로 타임아웃 설정은 각 카운터 트랜잭션 안에서만 한다.
 - **실제 공개 검증:** `GET /healthz`, `GET /v1/models` 통과. TF-IDF·LSTM·KLUE-BERT에서 예측과 LIME 설명 성공. 500자는 성공, 501자는 `422 INVALID_TEXT`. 브라우저에서 TF-IDF와 KLUE-BERT 분석·LIME 표시 성공. `/dataset`, `/about` 표시 확인. CORS는 최종 Vercel 프로덕션 origin으로 제한했다. LSTM 브라우저 표시 경로, 동시 부하·반복 콜드 스타트는 더 측정할 수 있다.
-- **비용:** 계정 화면상 Vercel Hobby, Neon Free, Modal Starter이며 Modal 결제 화면에 결제 수단 추가 안내가 표시된다(카드 미등록). Modal 무료 크레딧 잔여 $0.97/$1.00, 사용 $0.03. 지금까지 실제 청구는 없다. 크레딧 소진 뒤에는 유료 전환 없이 요청이 중단될 수 있다. 무료 플랜 한도 초과나 정책 변경 가능성은 계속 모니터링해야 하며, 결제 수단·유료 플랜을 추가하지 않는다.
+- **비용:** 계정 화면상 Vercel Hobby, Neon Free, Modal Starter이며 Modal 결제 화면에 결제 수단 추가 안내가 표시된다(카드 미등록). 2026-09-25 최신 확인값은 Modal 포함 무료 크레딧 $1.00 중 $0.07 사용·$0.93 잔여, 이번 주기 청구 $0이다. 크레딧 소진 뒤에는 유료 전환 없이 요청이 중단될 수 있다. 무료 플랜 한도 초과나 정책 변경 가능성은 계속 모니터링해야 하며, 결제 수단·유료 플랜을 추가하지 않는다.
 - **유지:** Streamlit과 기존 6시간 keep-alive를 계속 운영한다. 아래 안정성 게이트가 확인되기 전에는 Streamlit을 내리지 않는다.
 
 API 컨테이너에는 `GET /healthz`를 생존 확인 경로로 지정한다. 속도 제한과 DB 접근이 없으므로 부하 중에도 거절되지 않는다. 다만 생존 확인 전용이라 DB 도달 여부는 확인하지 않는다. 준비 확인이 필요해도 `/v1/models`는 쓰지 않는다 — 공개 예산을 소모해 부하 중에 재시작을 유발한다.
