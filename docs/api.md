@@ -88,7 +88,7 @@
 
 내부 예외·모델 파일 경로·요청 원문은 오류 메시지나 추적 이벤트에 넣지 않는다.
 
-`GET /v1/models`, `GET /v1/analyses/{analysisId}`, `POST /v1/analyses`는 PostgreSQL 공유 속도 제한을 사용한다. 기본 한도는 클라이언트 IP당 분당 30건, 전체 분당 300건이다. 한도를 넘으면 DB 조회·파일 검사·실행 기록 생성 전에 429 `RATE_LIMITED`를 반환한다. POST 동시 처리는 API 프로세스당 4건, 클라이언트 주소당 1건으로 제한하며 50ms 안에 입장하지 못하면 503 `SERVICE_BUSY`와 `Retry-After: 1`을 반환한다.
+`GET /v1/models`, `GET /v1/analyses/{analysisId}`, `POST /v1/analyses`는 PostgreSQL 공유 속도 제한을 사용한다. 기본 한도는 클라이언트 IP당 분당 30건, 전체 분당 300건이다. 한도를 넘으면 DB 조회·파일 검사·실행 기록 생성 전에 429 `RATE_LIMITED`를 반환한다. POST 동시 처리는 API 프로세스당 4건, 클라이언트 주소당 1건으로 제한하며 50ms 안에 입장하지 못하면 503 `SERVICE_BUSY`와 `Retry-After: 1`을 반환한다. 현재 Modal 공개 배포는 컨테이너 하나에 입력을 한 건씩만 전달하므로, 동시 요청은 이 제한에 닿기 전에 Modal 대기열에서 순서대로 처리된다(2026-09-26 측정, [공개 배포 기록](deployment-public.md)).
 
 ## 분석 결과 조회
 

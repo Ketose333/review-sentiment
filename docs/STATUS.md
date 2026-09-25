@@ -1,6 +1,6 @@
 # review-sentiment STATUS
 
-마지막 갱신: 2026-09-25
+마지막 갱신: 2026-09-26
 
 > 완료된 기능의 전체 목록은 루트 [README.md](../README.md) "기능"을 정본으로 본다. 이 파일은 인프라 상태와 알려진 이슈를 추적한다.
 
@@ -14,7 +14,7 @@
 | Java/JVM (Okt) | 로컬 JDK 17. `packages.txt` 자동 설치는 과거 Streamlit 배포 전용 |
 | 확장 스택 배포 형태 | ✅ 공개 배포됨 — [Next.js 웹](https://review-sentiment-web.vercel.app), [FastAPI 상태](https://ketose333--review-sentiment-api-api.ap-south.modal.run/healthz), Neon PostgreSQL Free. Vercel 프로젝트 `review-sentiment-web`, Vercel Hobby·Modal Starter·Neon Free 사용, PC와 무관하게 호스팅. Modal은 유휴 시 0개 컨테이너로 절전하고 첫 요청에 콜드 스타트가 있음. 웹은 정식 주소 하나만 연결하고 이전 Vercel 별칭과 API CORS 허용을 제거함. 이관 공개 기능 검증은 통과했으나 안정성·장기 비용 게이트는 미완료. 기존 Streamlit 배포 삭제는 이 게이트 통과를 뜻하지 않음. 비용·실측은 [공개 배포 기록](deployment-public.md) |
 | 프론트 재현 배포 | PR #16 머지 후 Vercel 기존 프로젝트에 배포 `dpl_HSP7QbCZesudNh6MCPQZLkWkJLXG` 완료. Node 22.x, npm 10, `npm ci`, Production `NEXT_PUBLIC_API_URL`, 고정 Vercel CLI와 대상 확인 절차를 적용. 공개 세 화면 200 및 브라우저 모델 목록 확인. 세 모델 분석·LIME과 장기 무료 한도는 이번 배포에서 재측정하지 않음 |
-| 확장 스택 비용 한도 | 결제 수단 없음. Modal 대시보드(2026-09-25) 잔여 무료 크레딧 $0.91/$1.00, 사용 $0.10, 청구액 $0으로 표시됨. 크레딧 소진 뒤 자동 유료 전환 없이 요청이 중단될 수 있음. Vercel Hobby와 Neon Free 사용량 한도도 적용됨. 유료 전환·결제 수단 추가 금지 |
+| 확장 스택 비용 한도 | 결제 수단 없음. Modal Starter는 결제 수단 없이 월 $30 중 $1만 사용 가능(매월 1일 초기화). 2026-09-26 대시보드 잔여 $0.87, 이번 주기 사용 $0.13~0.14, 청구액 $0. 크레딧 소진 뒤 자동 유료 전환 없이 요청이 중단될 수 있음. Vercel Hobby와 Neon Free 사용량 한도도 적용됨. 유료 전환·결제 수단 추가 금지 |
 | 확장 스택 속도 제한 | PostgreSQL 공통 고정 창 카운터(`rate_limit_counters`). 전역 예산은 허용된 요청만 청구(한 IP가 전체를 막지 못함), 원문 주소 미저장(소금값 HMAC 64자 + CHECK 제약), 전용 연결 풀과 트랜잭션 범위 서버 측 타임아웃, 카운터 장애 시 fail closed |
 
 ## 알려진 이슈
@@ -41,7 +41,8 @@
 - [x] **이관 기능 동등성**: [완료 기준](migration-parity.md)에 따라 세 모델 분석·LIME, 500자 입력을 구현. 로컬 Docker·PostgreSQL과 공개 API에서 예측·설명 및 500/501자 경계를 확인.
 - [x] **공개 배포 기능 검증**: 실제 웹/API 주소에서 세 모델 예측·LIME, 500/501자 경계, `/dataset`·`/about`, 브라우저 연동 확인. 공개 주소·실측은 [이관 완료 기준](migration-parity.md) 및 [공개 배포 계획](deployment-public.md) 참고
 - [x] **무료 한도 사용자 알림**: API 오류에서 한도 소진 가능성과 잔액 확인 한계를 모달로 알림. PR #16; 테스트 28건·lint·로컬/원격 빌드, 로컬 모달 표시·닫기, 공개 배포 완료
-- [ ] **이관 운영 안정성 검증**: 추가 비용 없이 반복 콜드 스타트·지연·동시 요청·최대 메모리·Neon 재개와 Modal/Vercel/Neon 사용량 한도 측정. 크레딧 소진 시 서비스 중단 위험 확인
+- [x] **이관 운영 안정성 측정**: 콜드 스타트 약 11.5초, 세 모델 500자+LIME 6.4~17.6초, 최대 메모리 약 1.76GiB/8GiB, 동시 요청은 Modal 대기열 직렬 처리, Modal $1/월로 약 85~250회 방문 추정. 크레딧 약 $0.01 사용 (이슈 #19, [기록](deployment-public.md))
+- [ ] **운영 후속 결정**: Modal 메모리 요청 축소(8→4GiB 등, 재측정 필요)와 동시성 계약 정리(대기열 동작 문서화 또는 Modal 입력 동시성 조정)
 - [x] **기존 Streamlit 배포 종료**: 사용자가 2026-09-25 삭제, 공개 주소 응답으로 확인. 이 저장소의 keep-alive workflow·스크립트·자동 검증 제거 (이슈 #17)
 - [ ] **이관 운영 게이트**: 세 모델의 배포 메모리·지연·비용 측정 → 공개 주소 안정성 확인 → 이관 완료 판정. Streamlit 배포 삭제는 이 게이트 통과가 아니며, 새 웹/API의 장기 안정성·무료 운영 검증은 미완료
 - [ ] **이관 완료 후 이력서 스택 재평가**: 실제 구현·테스트·공개 배포 증거를 기준으로 이력서의 기술 공백이 채워졌는지 확인하고, 부족한 항목만 다음 작업으로 정한다. 이관 완료 전에는 충족으로 표시하지 않음
