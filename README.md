@@ -18,6 +18,8 @@ NSMC(Naver Sentiment Movie Corpus) 기반 한국어 영화 리뷰 감성 분석 
 - 데모: https://nsmc-sentiment.streamlit.app
 <!-- PORTFOLIO:FACTS:END -->
 
+> FastAPI·Next.js·PostgreSQL 이관판을 [공개 웹](https://review-sentiment-web.vercel.app)에 병행 배포했습니다. 세 모델 예측·LIME과 500자 경계를 공개 환경에서 확인했으며, 장기 안정성과 무료 한도 검증 전까지 기존 [Streamlit 데모](https://nsmc-sentiment.streamlit.app)를 유지합니다. [이관 완료 기준](docs/migration-parity.md) · [공개 배포 상태](docs/deployment-public.md)
+
 ## 목차
 
 1. [배경](#배경)
@@ -53,7 +55,7 @@ NSMC(Naver Sentiment Movie Corpus) 기반 한국어 영화 리뷰 감성 분석 
 | 출처 | [github.com/e9t/nsmc](https://github.com/e9t/nsmc) — `ratings_train.txt` / `ratings_test.txt` |
 | 규모 | 200,000개 리뷰 (train 150,000 / test 50,000) |
 | 포맷 | Tab-separated `.txt` (`id` / `document` / `label`) |
-| 라이선스 | CC0 1.0 Universal |
+| 라이선스 | 원본 저장소에 명시되지 않음. 재배포 조건 확인 필요 |
 
 **종속변수(label) 정의**
 
@@ -62,7 +64,7 @@ NSMC(Naver Sentiment Movie Corpus) 기반 한국어 영화 리뷰 감성 분석 
 | `0` | 부정 | 네이버 영화 평점 1~4점 리뷰 |
 | `1` | 긍정 | 네이버 영화 평점 9~10점 리뷰 |
 
-> NSMC는 평점 5~8점(중립권) 리뷰를 원천 제외하고 구성된 데이터셋이라, label은 "평점이 아니라 리뷰 텍스트의 감성 자체"를 학습하도록 설계되어 있다.
+> NSMC는 평점 5~8점 리뷰를 제외하고, 1~4점은 부정·9~10점은 긍정으로 레이블을 만들었다. 리뷰 문장을 독립적으로 수작업 판정한 레이블은 아니다. 출처·라이선스 확인 내용은 [모델 점검](docs/model-audit.md)에 기록했다.
 
 <p align="right">(<a href="#readme-top">맨 위로</a>)</p>
 
@@ -73,7 +75,7 @@ NSMC 원본(.txt)
   └─ src/data/load_nsmc.py        다운로드 + 로드 (data/, gitignore)
        └─ src/preprocessing/      Okt 형태소 분석 + 불용어 제거
             └─ src/models/        모델별 학습 (tfidf_lr / lstm / klue_bert)
-                 ├─ models/{model}/         학습된 아티팩트 저장 (Git LFS)
+                 ├─ models/{model}/         로컬 아티팩트·평가 지표 (배포 가중치는 Hugging Face Hub)
                  ├─ src/evaluation/metrics.py   Accuracy/Precision/Recall/F1 계산
                  └─ src/explainability/lime_explainer.py   예측 근거 단어 추출
                       └─ app.py (Streamlit)  모델 선택 → 예측/비교/EDA 탭 → 배포
@@ -98,13 +100,13 @@ NSMC 원본(.txt)
 
 ## 모델 비교
 
-| 모델 | Accuracy | F1 | 특징 / 채택 이유 |
+| 모델 | Accuracy | F1 | 평가 범위·해석 |
 | --- | --- | --- | --- |
 | TF-IDF + LogisticRegression | 0.837 | 0.836 | 가장 가볍고 빠름, LIME 근거가 단어 단위로 가장 직관적 — 해석용 베이스라인 |
-| LSTM (Embedding→LSTM→Dense) | 0.824 | 0.814 | CPU로 전체 15만 행 학습했으나 정밀도 0.871 대비 재현율 0.763으로 낮아 F1이 TF-IDF 베이스라인에도 못 미침 — 과적합 경향 |
-| **KLUE-BERT (fine-tuned)** | **0.878** | **0.881** | 3개 중 최고 성능. CPU 제약으로 서브셋(train 1.8만/test 5천, 2 epoch) 학습했음에도 사전학습 언어모델 이점이 뚜렷함 — **최종 채택** |
+| LSTM (Embedding→LSTM→Dense) | 0.824 | 0.814 | 전체 테스트 분할 평가. 현재 기록은 기존 Accuracy 목표 0.85 미달 |
+| KLUE-BERT (fine-tuned) | 0.878 | 0.881 | CPU 제약으로 train 1.8만 건·test 5천 건 표본에서 평가. 전체 테스트 분할 검증 전 |
 
-> 성능 수치는 모두 **로컬/CPU 실측치**이며 `models/*/metrics.json`(앱 "모델 성능 비교" 탭이 런타임에 읽는 파일)과 같은 값이다. KLUE-BERT는 GPU·풀데이터 환경에서 0.90+ 기대(상세 근거는 보고서·`docs/prd.md` 참고).
+> 수치는 `models/*/metrics.json`에 저장된 기존 실험 결과다. KLUE-BERT만 테스트 분할의 5천 건 표본을 사용해 세 수치를 같은 조건의 순위로 해석할 수 없다. 재학습·출처 검토는 [모델 점검](docs/model-audit.md)을 참고한다.
 
 <p align="right">(<a href="#readme-top">맨 위로</a>)</p>
 
@@ -152,7 +154,7 @@ src/
 scripts/                    학습 CLI 진입점 (python scripts/train_xxx.py)
   train_tfidf_lr.py / train_lstm.py / train_klue_bert.py
   compute_eda.py            EDA 통계 사전계산 → models/eda/stats.json (Okt 우선, 미가용 시 경량 토크나이저 폴백)
-models/                     학습된 아티팩트 (Git LFS로 .pkl/.h5/.safetensors 추적, .gitattributes 참고)
+models/                     로컬 아티팩트·지표 (배포 가중치는 Hugging Face Hub에서 로드)
   tfidf_lr/ / lstm/ / klue_bert/
   eda/stats.json            EDA 사전계산 통계 (앱 "데이터 탐색" 탭이 로드)
 runtime.txt                 Streamlit Cloud용 Python 버전 힌트 (3.11)
@@ -203,7 +205,7 @@ streamlit run app.py
 
 ## 배포 (Streamlit Cloud)
 
-1. 레포를 GitHub에 push (모델 아티팩트는 Git LFS로 추적됨, `.gitattributes` 참고)
+1. 레포를 GitHub에 push (모델 가중치는 배포 시 Hugging Face Hub 자산 저장소에서 받음)
 2. [share.streamlit.io](https://share.streamlit.io)에서 레포 연결, entry point = `app.py`
 3. `packages.txt`로 JDK 자동 설치됨
 4. **⚠️ Python 버전 고정 필수**: Streamlit Cloud는 기본적으로 최신 Python(예: 3.14)을 띄우는데, `tensorflow`는 해당 버전용 wheel이 아직 없어 `pip install`이 통째로 실패한다(`No matching distribution found for tensorflow`). 앱 대시보드 **⋮ → Settings → Python version**에서 **3.11**을 선택할 것. (`runtime.txt`도 3.11로 두지만, 확실한 적용은 대시보드 설정이다.)
@@ -223,7 +225,9 @@ Streamlit Community Cloud 무료 티어는 일정 기간 트래픽이 없으면 
 ## 라이선스
 
 - 코드: 별도 오픈소스 라이선스는 지정되어 있지 않습니다.
-- 데이터: NSMC — CC0 1.0 Universal
+- 데이터: [NSMC 원본 저장소](https://github.com/e9t/nsmc)를 사용합니다. 원본 README에 라이선스 조건이 명시되어 있지 않아 데이터 재배포 조건은 확인 중입니다.
+- KLUE-BERT 베이스 모델: [`klue/bert-base`](https://huggingface.co/klue/bert-base), CC-BY-SA-4.0. 인용: [Park et al., 2021](https://arxiv.org/abs/2105.09680).
+- 배포 가중치: [프로젝트 자산 저장소](https://huggingface.co/datasets/Ketose333/review-sentiment-assets)에 출처와 CC-BY-SA-4.0을 표시합니다.
 
 <p align="right">(<a href="#readme-top">맨 위로</a>)</p>
 
