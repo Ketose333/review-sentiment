@@ -2,23 +2,26 @@
 
 # review-sentiment
 
-NSMC(Naver Sentiment Movie Corpus) 기반 한국어 영화 리뷰 감성 분석 웹앱. TF-IDF·LSTM·KLUE-BERT 3개 모델을 비교하고, LIME으로 예측 근거 단어를 시각화한다. 머신러닝 수업 과제로 시작한 프로젝트이며, Streamlit Cloud에 배포되어 있다.
+NSMC(Naver Sentiment Movie Corpus) 기반 한국어 영화 리뷰 감성 분석 서비스입니다. TF-IDF·LSTM·KLUE-BERT 예측과 LIME 설명을 FastAPI API와 Next.js 웹으로 제공합니다. 원래 Streamlit으로 만든 프로젝트를 이 스택으로 이관해 공개 운영 중입니다.
 
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)
 ![scikit--learn](https://img.shields.io/badge/scikit--learn-F7931E?style=flat-square&logo=scikitlearn&logoColor=white)
 ![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-000000?style=flat-square&logo=nextdotjs&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white)
 
-[**라이브 데모 »**](https://nsmc-sentiment.streamlit.app)
+[**리뷰 감성 분석 »**](https://review-sentiment-web.vercel.app)
+
+> [공개 웹](https://review-sentiment-web.vercel.app)과 FastAPI API를 Vercel·Modal·Neon에 배포했습니다. 세 모델 예측·LIME과 500자 입력 경계를 공개 환경에서 검증했습니다. 원래 Streamlit 구현과 이관 검증 기록은 아래 문서에서 확인할 수 있습니다. [이관 완료 기준](docs/migration-parity.md) · [공개 배포 상태](docs/deployment-public.md)
 
 <!-- PORTFOLIO:FACTS:START -->
-- 기간: 2026.06.21 ~ 2026.07.03 (12일) (completed)
-- 현재 스택: Python, PyTorch, KLUE-BERT, Streamlit
-- 현재 설명: KLUE-BERT 감성 분류와 모델 비교를 제공하는 Streamlit 앱
+- 기간: 2026.06.21 ~ 현재 (진행 중) (active)
+- 현재 스택: Python, FastAPI, Next.js, TypeScript, PostgreSQL, PyTorch, KLUE-BERT, LIME
+- 현재 설명: FastAPI API와 Next.js 웹에서 TF-IDF·LSTM·KLUE-BERT 예측과 LIME 설명을 제공하는 리뷰 감성 분석 서비스
 - 저장소: https://github.com/Ketose333/review-sentiment
-- 데모: https://nsmc-sentiment.streamlit.app
+- 데모: https://review-sentiment-web.vercel.app
 <!-- PORTFOLIO:FACTS:END -->
-
-> FastAPI·Next.js·PostgreSQL 이관판을 [공개 웹](https://review-sentiment-web.vercel.app)에 병행 배포했습니다. 세 모델 예측·LIME과 500자 경계를 공개 환경에서 확인했으며, 장기 안정성과 무료 한도 검증 전까지 기존 [Streamlit 데모](https://nsmc-sentiment.streamlit.app)를 유지합니다. [이관 완료 기준](docs/migration-parity.md) · [공개 배포 상태](docs/deployment-public.md)
 
 ## 목차
 
@@ -32,11 +35,12 @@ NSMC(Naver Sentiment Movie Corpus) 기반 한국어 영화 리뷰 감성 분석 
 8. [디렉터리 구조](#디렉터리-구조)
 9. [로컬 환경 셋업](#로컬-환경-셋업)
 10. [모델 학습](#모델-학습-이미-학습된-아티팩트가-models에-있으면-건너뛰어도-됨)
-11. [앱 실행](#앱-실행)
-12. [배포 (Streamlit Cloud)](#배포-streamlit-cloud)
-13. [상시 유지 (Keep-Alive)](#상시-유지-keep-alive)
-14. [라이선스](#라이선스)
-15. [연락처](#연락처)
+11. [로컬 웹/API 실행](#로컬-웹api-실행)
+12. [이전 Streamlit 앱 실행](#이전-streamlit-앱-실행-legacy)
+13. [이전 Streamlit 배포 기록](#이전-streamlit-배포-기록)
+14. [이전 Streamlit 상시 유지 기록](#이전-streamlit-상시-유지-기록)
+15. [라이선스](#라이선스)
+16. [연락처](#연락처)
 
 <p align="right">(<a href="#readme-top">맨 위로</a>)</p>
 
@@ -78,7 +82,9 @@ NSMC 원본(.txt)
                  ├─ models/{model}/         로컬 아티팩트·평가 지표 (배포 가중치는 Hugging Face Hub)
                  ├─ src/evaluation/metrics.py   Accuracy/Precision/Recall/F1 계산
                  └─ src/explainability/lime_explainer.py   예측 근거 단어 추출
-                      └─ app.py (Streamlit)  모델 선택 → 예측/비교/EDA 탭 → 배포
+                      ├─ backend/app/main.py (FastAPI)  공개 분석 API·모델 추론·LIME
+                      ├─ frontend/src/app (Next.js)     분석·데이터 탐색·소개 화면
+                      └─ app.py (legacy Streamlit)      초기 구현·이관 기준
 ```
 
 <p align="right">(<a href="#readme-top">맨 위로</a>)</p>
@@ -90,7 +96,8 @@ NSMC 원본(.txt)
 - [x] 모델 성능 비교 (Accuracy/Precision/Recall/F1)
 - [x] LIME 예측 근거 단어 시각화
 - [x] EDA (레이블/리뷰 길이/빈출 단어 분포)
-- [x] Streamlit Cloud 배포
+- [x] Streamlit 앱 구현·배포 (초기 구현)
+- [x] FastAPI·Next.js 이관 및 공개 배포
 - [ ] LSTM 시드 고정 기준 재검증
 - [ ] KLUE-BERT 전체 데이터/GPU 재학습으로 성능 상한 확인
 
@@ -123,7 +130,7 @@ NSMC 원본(.txt)
 | EDA (레이블 분포·리뷰 길이 분포·레이블별 빈출 단어 TOP20) | ✅ | 앱 "데이터 탐색(EDA)" 탭, `scripts/compute_eda.py`로 사전계산 → `models/eda/stats.json` |
 | 예시 리뷰 프리셋 (긍정/부정/애매/짧은 입력) | ✅ | 예측 탭 셀렉트박스 |
 | 모델 선택 메모리 최적화 | ✅ | 모델별 지연 import + `st.cache_resource(max_entries=1)` (무료 티어 OOM 방지) |
-| Streamlit Cloud 배포 | ✅ | Python 3.11 고정 필요 (아래 "배포" 참고) |
+| Streamlit Cloud 배포 (초기 구현) | 완료 | 현재 공개 서비스는 FastAPI API와 Next.js 웹이며, 로컬 실행은 아래 안내 참고 |
 
 > 모델별 성능 수치·채택 이유는 [모델 비교](#모델-비교) 참고.
 
@@ -193,32 +200,39 @@ python scripts/compute_eda.py       # EDA 통계 생성 → models/eda/stats.jso
 
 <p align="right">(<a href="#readme-top">맨 위로</a>)</p>
 
-## 앱 실행
+## 로컬 웹/API 실행
+
+새 웹과 API의 로컬 실행은 [로컬 배포 안내](docs/deployment-local.md)를 참고하세요. 공개 서비스 주소와 무료 사용 한도는 [공개 배포 상태](docs/deployment-public.md)에 기록합니다.
+
+<p align="right">(<a href="#readme-top">맨 위로</a>)</p>
+
+## 이전 Streamlit 앱 실행 (legacy)
+
+다음은 초기 Streamlit 구현을 로컬에서 확인하는 명령입니다. 현재 공개 서비스는 아래 Next.js 웹/API입니다.
 
 ```bash
 streamlit run app.py
 ```
 
-사이드바에서 모델 선택(TF-IDF+LR / LSTM / KLUE-BERT) → "🔍 예측" 탭에서 리뷰 입력 → 예측 결과 + LIME 단어별 기여도 시각화. "📊 모델 성능 비교" 탭에서 학습된 모델들의 정확도/F1 비교.
+사이드바에서 모델을 선택해 리뷰를 분석하고 LIME 근거와 모델 성능을 확인할 수 있습니다.
 
 <p align="right">(<a href="#readme-top">맨 위로</a>)</p>
 
-## 배포 (Streamlit Cloud)
+## 이전 Streamlit 배포 기록
+
+아래 내용은 초기 Streamlit 구현을 재현하기 위한 기록입니다. 현재 공개 서비스 링크는 상단의 Vercel 웹이며, 이 Streamlit 주소는 공식 진입점으로 제공하지 않습니다.
 
 1. 레포를 GitHub에 push (모델 가중치는 배포 시 Hugging Face Hub 자산 저장소에서 받음)
 2. [share.streamlit.io](https://share.streamlit.io)에서 레포 연결, entry point = `app.py`
 3. `packages.txt`로 JDK 자동 설치됨
 4. **⚠️ Python 버전 고정 필수**: Streamlit Cloud는 기본적으로 최신 Python(예: 3.14)을 띄우는데, `tensorflow`는 해당 버전용 wheel이 아직 없어 `pip install`이 통째로 실패한다(`No matching distribution found for tensorflow`). 앱 대시보드 **⋮ → Settings → Python version**에서 **3.11**을 선택할 것. (`runtime.txt`도 3.11로 두지만, 확실한 적용은 대시보드 설정이다.)
-5. 로컬 Streamlit fallback이 필요하면 `streamlit run app.py`로 실행한다.
+5. 초기 Streamlit 구현을 로컬에서 재현하려면 `streamlit run app.py`를 실행한다.
 
 <p align="right">(<a href="#readme-top">맨 위로</a>)</p>
 
-## 상시 유지 (Keep-Alive)
+## 이전 Streamlit 상시 유지 기록
 
-Streamlit Community Cloud 무료 티어는 일정 기간 트래픽이 없으면 앱이 슬립 상태로 전환된다.
-`.github/workflows/keep_alive.yml`이 6시간마다 GitHub-hosted Chromium으로 앱을 방문하고,
-슬립 화면이면 깨우기 버튼을 누른 뒤 앱 본문 로딩까지 검증한다. 앱은 Streamlit Community Cloud에서
-**Public**이어야 하며, 인증 리다이렉트나 로딩 실패는 성공으로 숨기지 않고 Actions 실패로 기록한다.
+이 워크플로는 이전 Streamlit 데모를 유지하던 운영 기록입니다. `.github/workflows/keep_alive.yml`이 6시간마다 앱을 방문해 슬립 복귀를 확인합니다. 현재 서비스의 정식 주소나 가용성 모니터로 해석하지 마세요.
 
 <p align="right">(<a href="#readme-top">맨 위로</a>)</p>
 
