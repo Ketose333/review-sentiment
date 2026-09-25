@@ -9,12 +9,13 @@
 | 항목 | 상태 |
 | --- | --- |
 | 모델 아티팩트 관리 | Hugging Face Hub 자산 저장소에서 런타임 로드 |
-| Streamlit 배포 | ✅ 배포됨 — https://nsmc-sentiment.streamlit.app (Public) |
-| Streamlit keep-alive | ✅ 공통 canonical Playwright로 6시간마다 방문·wake·앱 본문 로딩 검증 (PR #6, #8) |
-| Streamlit Python 버전 | **3.11 고정 필수** — 대시보드 ⋮ → Settings → Python version. 미고정 시 Python 3.14가 떠 tensorflow wheel 부재로 배포 크래시. `runtime.txt`(3.11)도 두지만 대시보드 설정이 확실함 |
-| Java/JVM (Okt) | 로컬 JDK 17, Streamlit Cloud는 `packages.txt`(`default-jdk`)로 자동 설치 |
+| Streamlit 초기 배포 | 과거 데모가 Public으로 남아 있음. 현재 정식 진입 주소는 [Next.js 웹](https://review-sentiment-web.vercel.app)이며 README·GitHub About에서 이전 데모 링크를 제거함 |
+| Streamlit keep-alive (legacy) | 이전 데모 주소를 6시간마다 방문하는 기존 workflow. 현재 웹/API 가용성 모니터로 간주하지 않음 (PR #6, #8) |
+| Streamlit 초기 앱 재현 | 과거 배포 설정은 Python 3.11과 `packages.txt` JDK에 의존. 현재 Next.js/FastAPI 공개 서비스를 재현하는 설정이 아님 |
+| Java/JVM (Okt) | 로컬 JDK 17. `packages.txt` 자동 설치는 과거 Streamlit 배포 전용 |
 | 확장 스택 배포 형태 | ✅ 공개 배포됨 — [Next.js 웹](https://review-sentiment-web.vercel.app), [FastAPI 상태](https://ketose333--review-sentiment-api-api.ap-south.modal.run/healthz), Neon PostgreSQL Free. Vercel 프로젝트 `review-sentiment-web`, Vercel Hobby·Modal Starter·Neon Free 사용, PC와 무관하게 호스팅. Modal은 유휴 시 0개 컨테이너로 절전하고 첫 요청에 콜드 스타트가 있음. 웹은 정식 주소 하나만 연결하고 이전 Vercel 별칭과 API CORS 허용을 제거함. 이관 공개 기능 검증은 통과했으나 안정성·장기 비용 게이트 전이라 Streamlit은 유지. 비용·실측은 [공개 배포 기록](deployment-public.md) |
-| 확장 스택 비용 한도 | 결제 수단 없음. Modal 대시보드(2026-09-25) 잔여 무료 크레딧 $0.93/$1.00, 사용 $0.07, 청구액 $0으로 표시됨. 크레딧 소진 뒤 자동 유료 전환 없이 요청이 중단될 수 있음. Vercel Hobby와 Neon Free 사용량 한도도 적용됨. 유료 전환·결제 수단 추가 금지 |
+| 프론트 재현 배포 | PR #16 머지 후 Vercel 기존 프로젝트에 배포 `dpl_HSP7QbCZesudNh6MCPQZLkWkJLXG` 완료. Node 22.x, npm 10, `npm ci`, Production `NEXT_PUBLIC_API_URL`, 고정 Vercel CLI와 대상 확인 절차를 적용. 공개 세 화면 200 및 브라우저 모델 목록 확인. 세 모델 분석·LIME과 장기 무료 한도는 이번 배포에서 재측정하지 않음 |
+| 확장 스택 비용 한도 | 결제 수단 없음. Modal 대시보드(2026-09-25) 잔여 무료 크레딧 $0.91/$1.00, 사용 $0.10, 청구액 $0으로 표시됨. 크레딧 소진 뒤 자동 유료 전환 없이 요청이 중단될 수 있음. Vercel Hobby와 Neon Free 사용량 한도도 적용됨. 유료 전환·결제 수단 추가 금지 |
 | 확장 스택 속도 제한 | PostgreSQL 공통 고정 창 카운터(`rate_limit_counters`). 전역 예산은 허용된 요청만 청구(한 IP가 전체를 막지 못함), 원문 주소 미저장(소금값 HMAC 64자 + CHECK 제약), 전용 연결 풀과 트랜잭션 범위 서버 측 타임아웃, 카운터 장애 시 fail closed |
 
 ## 알려진 이슈
@@ -31,16 +32,17 @@
 
 - [x] **확장 초기 결정**: 결과 보존 24시간·로컬 구현 입력 상한 200자. 이관 완료 목표는 500자로 변경됨
 - [x] **확장 단계 A 설계 초안**: `docs/api.md`·`docs/data-model.md`·`docs/architecture.md` 작성
-- [x] **확장 단계 A·B 구현**: FastAPI 골격·PostgreSQL 마이그레이션·단건 분석을 로컬·Neon에서 검증하고 공개 API로 배포. 작업트리 변경은 아직 커밋·푸시하지 않음
+- [x] **확장 단계 A·B 구현**: FastAPI 골격·PostgreSQL 마이그레이션·단건 분석을 로컬·Neon에서 검증하고 공개 API로 배포. `78132a3`에 구현 기록
 - [x] **모델 공통 표본 평가**: 세 모델을 동일한 NSMC 테스트 5,000건에서 재평가하고 데이터·아티팩트 해시와 평가 조건을 기록 (`reports/README.md`)
-- [x] **확장 단계 C 구현**: Next.js 웹 클라이언트 빌드·lint·실제 API 연결·데스크톱/모바일 브라우저 검증 완료. Vercel 프로덕션 배포. 기존 Streamlit 데모 유지. 작업트리 변경은 아직 커밋·푸시하지 않음
+- [x] **확장 단계 C 구현**: Next.js 웹 클라이언트 빌드·lint·실제 API 연결·데스크톱/모바일 브라우저 검증 완료. Vercel 프로덕션 배포. 기존 Streamlit 앱은 legacy로 유지. `f8bab82`에 구현 기록
 - [x] **확장 단계 D 계약·측정**: TF-IDF 요청 시 LIME 생성만 지원하기로 결정하고 일회성 응답·원문 미저장 계약과 모델별 CPU 측정 기록 (`docs/lime-measurement.md`, 이슈 #13)
-- [x] **확장 단계 D 구현**: TF-IDF·LSTM·KLUE-BERT 선택적 LIME API·웹 표시·설명 실패 분리·상태 전이 경합 수정. 실제 PostgreSQL·모델·브라우저 검증 완료. 공개 배포 포함. 작업트리 변경은 아직 커밋·푸시하지 않음
-- [x] **확장 단계 D 실행 격리**: 멈춘 추론·LIME을 중단하는 하드 타임아웃 구현·검증. 전처리·추론·LIME을 워커 프로세스로 분리하고 기한 초과 시 종료. 실제 PostgreSQL·모델 파일로 백엔드 테스트 83건 통과, 공개 배포 환경에서 정상 분석·LIME 확인. 작업트리 변경은 아직 커밋·푸시하지 않음
+- [x] **확장 단계 D 구현**: TF-IDF·LSTM·KLUE-BERT 선택적 LIME API·웹 표시·설명 실패 분리·상태 전이 경합 수정. 실제 PostgreSQL·모델·브라우저 검증 완료. 공개 배포 포함. 해당 변경은 `main`에 반영됨
+- [x] **확장 단계 D 실행 격리**: 멈춘 추론·LIME을 중단하는 하드 타임아웃 구현·검증. 전처리·추론·LIME을 워커 프로세스로 분리하고 기한 초과 시 종료. 실제 PostgreSQL·모델 파일로 백엔드 테스트 83건 통과, 공개 배포 환경에서 정상 분석·LIME 확인. 해당 변경은 `main`에 반영됨
 - [x] **공개 배포 전 운영 점검**: 다중 프로세스 공통 속도 제한을 PostgreSQL 공통 카운터로 구현·검증(uvicorn 워커 2개에서 단일 예산 확인). 웹 Vercel · API 컨테이너 · 관리형 PostgreSQL로 분리하는 방향 결정. API 호스팅 사양·비용은 세 모델 실측 후 확정
 - [x] **Streamlit 이관 1단계 화면**: `/dataset`·`/about` 신설, 예시 프리셋 추가, F1 최고 모델을 같은 평가 범위 안에서만 강조. 공개 웹 화면과 API 브라우저 연동 통과. 500자 상한 적용.
 - [x] **이관 기능 동등성**: [완료 기준](migration-parity.md)에 따라 세 모델 분석·LIME, 500자 입력을 구현. 로컬 Docker·PostgreSQL과 공개 API에서 예측·설명 및 500/501자 경계를 확인.
 - [x] **공개 배포 기능 검증**: 실제 웹/API 주소에서 세 모델 예측·LIME, 500/501자 경계, `/dataset`·`/about`, 브라우저 연동 확인. 공개 주소·실측은 [이관 완료 기준](migration-parity.md) 및 [공개 배포 계획](deployment-public.md) 참고
+- [x] **무료 한도 사용자 알림**: API 오류에서 한도 소진 가능성과 잔액 확인 한계를 모달로 알림. PR #16; 테스트 28건·lint·로컬/원격 빌드, 로컬 모달 표시·닫기, 공개 배포 완료
 - [ ] **이관 운영 안정성 검증**: 추가 비용 없이 반복 콜드 스타트·지연·동시 요청·최대 메모리·Neon 재개와 Modal/Vercel/Neon 사용량 한도 측정. 크레딧 소진 시 서비스 중단 위험 확인
 - [ ] **Streamlit 이관 2·3단계**: 세 모델의 배포 메모리·지연·비용 측정 → 공개 주소 기능 검증 → 안정 확인 뒤 keep-alive 이전·Streamlit 은퇴
 - [ ] **이관 완료 후 이력서 스택 재평가**: 실제 구현·테스트·공개 배포 증거를 기준으로 이력서의 기술 공백이 채워졌는지 확인하고, 부족한 항목만 다음 작업으로 정한다. 이관 완료 전에는 충족으로 표시하지 않음

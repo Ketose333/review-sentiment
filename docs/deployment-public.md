@@ -6,7 +6,7 @@
 
 | 대상 | 현재 | 이 프로젝트에 주는 제약 |
 |---|---|---|
-| review-sentiment Streamlit | Streamlit Cloud Public, https://nsmc-sentiment.streamlit.app, Python 3.11 고정, `packages.txt`로 `default-jdk` 설치 | 대체 대상. 이관 완료 전에는 내리지 않는다 |
+| review-sentiment Streamlit (legacy) | 기존 Streamlit Cloud 앱은 Public으로 남아 있음. 공식 웹 진입점은 https://review-sentiment-web.vercel.app | 과거 구현 재현용. README와 GitHub About에서는 현재 데모로 노출하지 않음 |
 | music-mood-recs Streamlit | Streamlit Cloud Public | 같은 무료 티어를 공유하므로 새 비용을 만들지 않는 편이 일관적이다 |
 | 슬립 대응 | 공통 Playwright keep-alive GitHub Actions(6시간 주기 방문·wake·본문 검증) | 새 API·웹도 같은 방식으로 깨울 수 있다 |
 | web-portfolio | Vercel(`*.vercel.app`), 커스텀 부모 도메인 이전을 계획 중 | 웹은 Vercel이 기존 계정·경험과 맞는다 |
@@ -49,14 +49,32 @@
 ### 2026-09-25 실제 공개 배포
 
 - **웹:** Vercel Hobby 프로젝트를 `review-sentiment-web`로 정리하고 `frontend/`만 직접 업로드했다. Next.js 16.3.6 프로덕션 빌드 통과. 정식 공개 주소는 https://review-sentiment-web.vercel.app 하나만 Production 도메인으로 연결했다. 기존 `frontend-kappa-navy-gtn5mqhmrx.vercel.app` 및 `frontend-ketose333.vercel.app` 별칭은 프로젝트와 배포에서 제거했다. GitHub 자동 연결은 실패했지만 직접 업로드 배포는 성공했다. 다음 배포는 CLI에서 수동 실행해야 한다.
-- **도메인·CORS 정리:** Vercel 프로젝트 이름을 `frontend`에서 `review-sentiment-web`로 변경했다. Modal Secret의 CORS 허용 목록에는 `https://review-sentiment-web.vercel.app`만 둔다. 새 도메인의 모델 목록 로딩과 CORS 응답을 확인했고, 이전 Vercel 주소는 더 이상 지원하지 않는다. Streamlit 주소는 대체 전까지 유지한다.
+- **도메인·CORS 정리:** Vercel 프로젝트 이름을 `frontend`에서 `review-sentiment-web`로 변경했다. Modal Secret의 CORS 허용 목록에는 `https://review-sentiment-web.vercel.app`만 둔다. 새 도메인의 모델 목록 로딩과 CORS 응답을 확인했고, 이전 Vercel 주소는 더 이상 지원하지 않는다. 기존 Streamlit 앱과 keep-alive는 legacy 상태로 남아 있으며, 공식 진입 링크는 새 웹 주소 하나만 제공한다.
 - **API:** Modal Starter에서 FastAPI 이미지 배포. https://ketose333--review-sentiment-api-api.ap-south.modal.run . `min_containers=0`, 유휴 60초 후 scale-to-zero, `max_containers=1`, 2 CPU·8 GiB. 컴퓨트는 PC와 무관하게 원격 실행되고 URL은 계속 공개되지만, 첫 요청에는 콜드 스타트가 있다. 화면에서 모델 목록 복귀까지 18초 이상 한 번 관측했다.
 - **DB:** Neon Free (Singapore), 0001~0008 마이그레이션 완료. API가 쓰는 pooled endpoint는 IPv6 우선 경로와 연결 시작 `options` 제한이 있어 첫 공개 조회가 실패했다. 공유 카운터 타임아웃을 PostgreSQL 트랜잭션 범위 `set_config(..., true)`로 적용하도록 수정 후 조회가 정상화되었다. Neon PgBouncer의 transaction pooling은 세션 상태를 보존하지 않으므로 타임아웃 설정은 각 카운터 트랜잭션 안에서만 한다.
 - **실제 공개 검증:** `GET /healthz`, `GET /v1/models` 통과. TF-IDF·LSTM·KLUE-BERT에서 예측과 LIME 설명 성공. 500자는 성공, 501자는 `422 INVALID_TEXT`. 브라우저에서 TF-IDF와 KLUE-BERT 분석·LIME 표시 성공. `/dataset`, `/about` 표시 확인. CORS는 최종 Vercel 프로덕션 origin으로 제한했다. LSTM 브라우저 표시 경로, 동시 부하·반복 콜드 스타트는 더 측정할 수 있다.
-- **비용:** 계정 화면상 Vercel Hobby, Neon Free, Modal Starter이며 Modal 결제 화면에 결제 수단 추가 안내가 표시된다(카드 미등록). 2026-09-25 최신 확인값은 Modal 포함 무료 크레딧 $1.00 중 $0.07 사용·$0.93 잔여, 이번 주기 청구 $0이다. 크레딧 소진 뒤에는 유료 전환 없이 요청이 중단될 수 있다. 무료 플랜 한도 초과나 정책 변경 가능성은 계속 모니터링해야 하며, 결제 수단·유료 플랜을 추가하지 않는다.
+- **비용:** 계정 화면상 Vercel Hobby, Neon Free, Modal Starter이며 Modal 결제 화면에 결제 수단 추가 안내가 표시된다(카드 미등록). 2026-09-25 Usage & Billing 화면 확인값은 Modal 무료 크레딧 $1.00 중 $0.10 사용·$0.91 잔여, 이번 주기 청구 $0이다. 크레딧 소진 뒤에는 유료 전환 없이 요청이 중단될 수 있다. 무료 플랜 한도 초과나 정책 변경 가능성은 계속 모니터링해야 하며, 결제 수단·유료 플랜을 추가하지 않는다.
 - **유지:** Streamlit과 기존 6시간 keep-alive를 계속 운영한다. 아래 안정성 게이트가 확인되기 전에는 Streamlit을 내리지 않는다.
 
 API 컨테이너에는 `GET /healthz`를 생존 확인 경로로 지정한다. 속도 제한과 DB 접근이 없으므로 부하 중에도 거절되지 않는다. 다만 생존 확인 전용이라 DB 도달 여부는 확인하지 않는다. 준비 확인이 필요해도 `/v1/models`는 쓰지 않는다 — 공개 예산을 소모해 부하 중에 재시작을 유발한다.
+
+### 2026-09-25 프론트 재현 배포 (PR #16)
+
+배포 전에는 로컬 Node 20.19.2/npm 10.8.2와 CI Node 22가 달랐고, 일회성 `NEXT_PUBLIC_API_URL` 주입과 임시 의존성 설치가 남아 있었다. `frontend/.codex-deps/partial-npm-node_modules` 안의 외부 테스트 두 개가 Vitest 기본 검색에 포함되어 앱 테스트 28건은 통과해도 전체 명령이 실패하는 현상을 재현했다. Vercel CLI의 이전 `@vercel/detect-agent` 로딩 실패는 원래 호출 경로의 로그를 확보하지 못했지만, 당시 임시 설치에는 해당 패키지와 CLI 실행 파일이 없었다. 따라서 CLI 자체 결함으로 단정하지 않는다. Windows 드라이브 간 `node_modules` 복사·이동을 없애고 프론트 디렉터리에서 잠금 파일로 `npm ci`를 실행한다. 첫 깨끗한 설치는 npm registry tarball 한 건에 233초가 걸렸고, 다시 실행한 `npm ci --include=dev --prefer-offline`은 11분 뒤 성공했다. 이 지연은 의존성 다운로드 계층이다.
+
+재현 기준은 Node 22.16.0/npm 10.9.2, `frontend/package-lock.json`, `npm ci --include=dev`다. Vitest는 `frontend/tests/`만 검색하고 `.codex-deps`·npm 캐시·빌드 산출물은 테스트·lint·TypeScript·Git 범위에서 제외한다. `frontend/scripts/check-env.mjs`가 로컬 빌드와 Vercel 원격 빌드의 API origin을 같은 규칙으로 검사한다. Vercel 프로젝트 `review-sentiment-web`의 Root Directory를 `frontend`, Node.js를 22.x로 맞추고 Production `NEXT_PUBLIC_API_URL`을 공개 API HTTPS origin으로 등록했다. 로컬 Vercel CLI 60.0.1은 잠금 파일로 설치하며, 루트의 프로젝트 링크와 확인 기록이 일치하지 않으면 프로덕션 배포 명령을 실행하지 않는다. 새 PC 명령·대상 확인 순서는 [프론트 README](../frontend/README.md)에 있다. 인증 파일과 토큰은 Git에 추가하지 않는다.
+
+| 검증 | 결과 |
+| --- | --- |
+| 깨끗한 설치 | Node 22.16.0/npm 10.9.2에서 `npm ci --include=dev` PASS, 651개 패키지 |
+| 로컬 | `npm test` 4개 파일·28건 PASS, `npm run lint` PASS, 로컬 실패 URL과 공개 HTTPS URL 각각 `npm run build` PASS |
+| 모달 브라우저 | 로컬 `http://127.0.0.1:9`로 실제 Modal API 호출 없이 네이티브 모달 표시·중앙 정렬·닫기 확인. 테스트 서버와 탭 종료 |
+| CLI·CI | 고정 CLI 60.0.1 로딩 PASS; PR #16 Auto Review·Frontend CI PASS |
+| 원격 | 배포 `dpl_HSP7QbCZesudNh6MCPQZLkWkJLXG` READY·정식 주소 연결. Vercel Node 22.23.2/npm 10.9.8에서 `npm ci`·공통 URL 검사·Next.js 빌드 PASS |
+| 공개 주소 | `/`, `/dataset`, `/about` HEAD 200. 브라우저에서 세 모델 목록 로딩 확인; 분석 POST·LIME은 이번 검증에서 반복하지 않음 |
+| 의존성 감사 | 원격 전체 설치 경고 29건. 로컬 `npm audit --omit=dev`에서 프로덕션 의존성 0건 |
+
+이 배포는 화면·연결 확인이다. 공개 환경의 분석·설명 실패 처리, 반복 콜드 스타트, 동시 부하, 최대 메모리와 장기 무료 한도는 아직 이관 완료 게이트에 남아 있다. 기존 Streamlit 앱과 keep-alive는 유지한다.
 
 ### 로컬 실측을 반영한 공개 시험 사양
 
