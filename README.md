@@ -16,7 +16,7 @@ NSMC(Naver Sentiment Movie Corpus) 기반 한국어 영화 리뷰 감성 분석 
 > [공개 웹](https://review-sentiment-web.vercel.app)과 FastAPI API를 Vercel·Modal·Neon에 배포했습니다. 세 모델 예측·LIME과 500자 입력 경계를 공개 환경에서 검증했습니다. 원래 Streamlit 구현과 이관 검증 기록은 아래 문서에서 확인할 수 있습니다. [이관 완료 기준](docs/migration-parity.md) · [공개 배포 상태](docs/deployment-public.md)
 
 <!-- PORTFOLIO:FACTS:START -->
-- 기간: 2026.06.21 ~ 현재 (진행 중) (active)
+- 기간: 2026.06.21 ~ 2026.09.26 (MVP 12일·이관 4일) (completed)
 - 현재 스택: Python, FastAPI, Next.js, TypeScript, PostgreSQL, PyTorch, KLUE-BERT, LIME
 - 현재 설명: FastAPI API와 Next.js 웹에서 TF-IDF·LSTM·KLUE-BERT 예측과 LIME 설명을 제공하는 리뷰 감성 분석 서비스
 - 저장소: https://github.com/Ketose333/review-sentiment
