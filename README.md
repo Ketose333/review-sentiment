@@ -18,7 +18,7 @@ NSMC(Naver Sentiment Movie Corpus) 기반 한국어 영화 리뷰 감성 분석 
 <!-- PORTFOLIO:FACTS:START -->
 - 기간: 2026.06.21 ~ 2026.09.26 (MVP 12일·이관 4일) (completed)
 - 현재 스택: Python, FastAPI, Next.js, TypeScript, PostgreSQL, PyTorch, KLUE-BERT, LIME
-- 현재 설명: FastAPI API와 Next.js 웹에서 TF-IDF·LSTM·KLUE-BERT 예측과 LIME 설명을 제공하는 리뷰 감성 분석 서비스
+- 현재 설명: 세 모델 감성 분류와 LIME 근거를 제공하는 FastAPI·Next.js 앱
 - 저장소: https://github.com/Ketose333/review-sentiment
 - 데모: https://review-sentiment-web.vercel.app
 <!-- PORTFOLIO:FACTS:END -->
