@@ -16,6 +16,6 @@
 | `deployment-public.md` | 공개 배포 기록 | 공개 웹·API·DB 구성과 비용 위험, Streamlit 이관 단계 |
 | `../reports/README.md` | 재평가 결과 | 세 저장 모델의 동일 NSMC 5,000건 표본 평가와 재현 조건 |
 
-## 해당 없음
+## 구현 진입점
 
-- `backend.md`: **현재 구현에는 해당 없음**. FastAPI 구현 시 실제 모듈·운영 절차를 문서화한다.
+- [FastAPI 백엔드](../backend/README.md)와 [Next.js 프런트엔드](../frontend/README.md)에서 로컬 실행과 구조를 확인한다.
