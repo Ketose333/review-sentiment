@@ -1,5 +1,7 @@
 # review-sentiment STATUS
 
+현행 아키텍처와 레거시 앱의 로컬 재현 범위를 문서에 명시했습니다. [문서 변경 #28](https://github.com/Ketose333/review-sentiment/pull/28)
+
 마지막 갱신: 2026-09-26
 
 > 완료된 기능의 전체 목록은 루트 [README.md](../README.md) "기능"을 정본으로 본다. 이 파일은 인프라 상태와 알려진 이슈를 추적한다.
