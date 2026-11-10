@@ -1,4 +1,4 @@
-# 확장 아키텍처 (Draft)
+# 공개 서비스 아키텍처
 
 기준: [PRD §26](prd.md), [현재 API 계약](api.md), [데이터 모델](data-model.md). 아래는 현재 공개 배포된 구현의 구조다. 운영 안정성 게이트와 Streamlit 종료 조건은 [이관 완료 기준](migration-parity.md)을 따른다.
 
